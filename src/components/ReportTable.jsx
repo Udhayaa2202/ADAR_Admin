@@ -70,14 +70,20 @@ const ReportTable = ({ reports, onSelectReport }) => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                     <input
                         type="text"
-                        placeholder="Search by Report ID..."
+                        placeholder="Search by 6-digit Report ID..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                            setSearchTerm(val);
+                        }}
                         className="w-full bg-[#0D1B2A] border border-white/5 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-cyber-dark-accent/50 transition-colors"
                     />
                 </div>
 
-                <div className="flex items-center gap-2 w-full md:w-auto">
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                    <span className="text-xs font-bold text-white/30 uppercase tracking-widest whitespace-nowrap">
+                        Showing <span className="text-cyber-dark-accent">{filteredReports.length}</span> of {reports.length} Signals
+                    </span>
                     <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-xl border border-white/5">
                         <Filter className="w-4 h-4 text-white/50" />
                         <select
@@ -85,11 +91,10 @@ const ReportTable = ({ reports, onSelectReport }) => {
                             onChange={(e) => setStatusFilter(e.target.value)}
                             className="bg-transparent text-sm font-medium focus:outline-none cursor-pointer pr-2"
                         >
-                            <option value="All">All Status</option>
-                            <option value="Verified">Verified</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Under Review">Under Review</option>
-                            <option value="Flagged">Flagged</option>
+                            <option value="All" className="bg-[#16213E] text-white">All Status</option>
+                            <option value="Verified" className="bg-[#16213E] text-white">Verified</option>
+                            <option value="Under Review" className="bg-[#16213E] text-white">Under Review</option>
+                            <option value="Flagged" className="bg-[#16213E] text-white">Flagged</option>
                         </select>
                     </div>
                 </div>
