@@ -449,12 +449,21 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
                         </div>
                     </div>
 
-                    <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
-                        <div className="px-4 py-2 flex items-center gap-3">
-                            <span className="text-[10px] text-white/30 uppercase font-black whitespace-nowrap">Trust Score</span>
-                            <span className={`text-xl font-black ${report.trustScore >= 80 ? 'text-cyber-dark-green' : report.trustScore >= 50 ? 'text-cyber-dark-amber' : 'text-cyber-dark-red'}`}>
-                                {report.trustScore}%
-                            </span>
+                    <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5 shadow-inner">
+                        <div className="px-5 py-3 flex flex-col items-end gap-1.5 min-w-[160px]">
+                            <div className="flex items-center gap-2">
+                                <User className="w-4 h-4 text-cyber-dark-accent" />
+                                <span className="text-[15px] font-mono font-bold text-cyber-dark-accent uppercase tracking-wider">
+                                    {report.userId || 'Anonymous'}
+                                </span>
+                            </div>
+                            <div className="h-px w-full bg-white/5" />
+                            <div className="flex items-center gap-3 w-full justify-between">
+                                <span className="text-[9px] text-white/60 uppercase font-black tracking-widest whitespace-nowrap">Trust Score</span>
+                                <span className={`text-lg font-black leading-none ${report.trustScore >= 80 ? 'text-cyber-dark-green' : report.trustScore >= 50 ? 'text-cyber-dark-amber' : 'text-cyber-dark-red'}`}>
+                                    {report.trustScore}<span className="text-[9px] opacity-30 ml-0.5">%</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </header>
@@ -589,7 +598,7 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
                     </div>
 
                     {/* Right Column: Intelligence & Actions */}
-                    <div className="lg:sticky lg:top-8 space-y-4">
+                    <div className="space-y-4">
                         {/* Trust Breakdown */}
                         <section className="glass-card p-6 space-y-6">
                             <div className="flex items-center gap-2 text-cyber-dark-amber">

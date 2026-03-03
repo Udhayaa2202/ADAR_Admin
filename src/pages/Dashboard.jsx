@@ -218,7 +218,7 @@ const Dashboard = ({ onViewReport }) => {
     };
 
     return (
-        <div className="h-full flex flex-col p-6 gap-6 font-sans overflow-hidden">
+        <div className="h-full flex flex-col p-6 gap-6 font-sans overflow-y-auto custom-scrollbar">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-2 shrink-0">
                 <div>
                     <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
@@ -297,7 +297,7 @@ const Dashboard = ({ onViewReport }) => {
             </div>
 
             {/* Analytics Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
                 <div className="lg:col-span-2 glass-card p-5 flex flex-col gap-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">

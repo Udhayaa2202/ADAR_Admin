@@ -30,7 +30,7 @@ const TopReporters = ({ reports }) => {
                 ...user,
                 avgTrust: (user.totalTrust / user.totalReports).toFixed(1)
             }))
-            .sort((a, b) => b.totalReports - a.totalReports || b.avgTrust - a.avgTrust)
+            .sort((a, b) => b.avgTrust - a.avgTrust || b.totalReports - a.totalReports)
             .slice(0, 5); // Top 5
     };
 
@@ -48,14 +48,20 @@ const TopReporters = ({ reports }) => {
             <div className="flex flex-col gap-3">
                 {data.map((user, index) => (
                     <div key={user.userId} className="flex flex-col gap-1.5 p-3 rounded-xl bg-white/2 border border-white/5 hover:bg-white/5 transition-all">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 overflow-hidden">
-                                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${index === 0 ? 'bg-cyber-dark-amber text-[#0D1B2A]' : 'bg-white/10 text-white/40'}`}>
-                                    #{index + 1}
-                                </span>
-                                <span className="text-xs font-mono font-bold text-cyber-dark-accent truncate">{user.userId}</span>
+                        <div className="flex items-end justify-between">
+                            <div className="flex flex-col gap-1 overflow-hidden">
+                                <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.2em] leading-none">Reporter ID</span>
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 ${index === 0 ? 'bg-cyber-dark-amber text-[#0D1B2A]' : 'bg-white/10 text-white/40'}`}>
+                                        #{index + 1}
+                                    </span>
+                                    <span className="text-xs font-mono font-bold text-cyber-dark-accent truncate">{user.userId}</span>
+                                </div>
                             </div>
-                            <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">{user.totalReports} Reports</span>
+                            <div className="flex flex-col items-end gap-1">
+                                <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.2em] leading-none">Reports Filed</span>
+                                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">{user.totalReports}</span>
+                            </div>
                         </div>
                         <div className="flex items-center justify-between gap-4">
                             <div className="flex-1 h-1 rounded-full bg-white/5 overflow-hidden">
