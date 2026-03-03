@@ -10,8 +10,6 @@ import {
     Loader2
 } from 'lucide-react';
 import {
-    LineChart,
-    Line,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -24,19 +22,11 @@ import StatCard from '../components/StatCard';
 import ReportTable from '../components/ReportTable';
 import { fetchAllReports } from '../services/dataService';
 
-const mockChartData = [
-    { name: 'Feb 1', trust: 85, reports: 12 },
-    { name: 'Feb 5', trust: 82, reports: 18 },
-    { name: 'Feb 10', trust: 75, reports: 25 },
-    { name: 'Feb 15', trust: 68, reports: 40 },
-    { name: 'Feb 20', trust: 72, reports: 32 },
-    { name: 'Feb 25', trust: 78, reports: 22 },
-    { name: 'Mar 1', trust: 84, reports: 15 },
-];
 
 const Dashboard = ({ onViewReport }) => {
     const [reports, setReports] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [viewType, setViewType] = useState('daily'); // 'daily' or 'monthly'
 
     const loadReports = async () => {
         setIsLoading(true);
@@ -54,6 +44,67 @@ const Dashboard = ({ onViewReport }) => {
         loadReports();
     }, []);
 
+
+    const processChartData = () => {
+        if (!reports.length) return [];
+
+        const dataMap = {};
+
+        reports.forEach(report => {
+            const date = report.createdAt?.toDate ? report.createdAt.toDate() : new Date(report.incidentDate || Date.now());
+            const key = viewType === 'daily'
+                ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                : date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+            if (!dataMap[key]) {
+                dataMap[key] = { name: key, Verified: 0, Flagged: 0, 'Under Review': 0, Rejected: 0 };
+            }
+
+            const status = report.status || 'Under Review';
+            if (dataMap[key].hasOwnProperty(status)) {
+                dataMap[key][status]++;
+            }
+        });
+
+        // Convert to array and sort by date (simple heuristic for now)
+        return Object.values(dataMap).reverse(); // reverse since fetchAllReports is desc
+    };
+
+    const chartData = processChartData();
+
+    const processCategoryData = () => {
+        if (!reports.length) return [];
+
+        const TRANSLATIONS = {
+            'பாதுகாப்பு': 'Safety',
+            'போக்குவரத்து': 'Traffic',
+            'கட்டமைப்பு': 'Infrastructure',
+            'சுகாதாரம்': 'Sanitation',
+            'விபத்து': 'Accident',
+            'விற்பனை/பரிமாற்றம்': 'Sale/Exchange',
+            'மற்றவை': 'Other'
+        };
+
+        const categories = {};
+        reports.forEach(report => {
+            let cat = report.activity_type || 'Uncategorized';
+            // Translate if Tamil term exists in mapping
+            cat = TRANSLATIONS[cat] || cat;
+            categories[cat] = (categories[cat] || 0) + 1;
+        });
+        const COLORS = ['#3A86FF', '#06D6A0', '#FFBE0B', '#FB5607', '#FF006E', '#8338EC'];
+
+        return Object.entries(categories)
+            .map(([name, value], index) => ({
+                name,
+                value,
+                fill: COLORS[index % COLORS.length]
+            }))
+            .sort((a, b) => b.value - a.value);
+    };
+
+    const categoryData = processCategoryData();
+
     const totalReports = reports.length;
     const activeAlerts = reports.filter(r => r.status === 'Flagged').length;
     const avgTrust = reports.length > 0
@@ -62,22 +113,18 @@ const Dashboard = ({ onViewReport }) => {
     const verifiedUsers = [...new Set(reports.map(r => r.userId))].length;
 
     return (
-        <div className="flex-1 p-8 space-y-8 max-w-7xl mx-auto font-sans">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="h-full flex flex-col p-6 gap-6 font-sans overflow-hidden">
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-2 shrink-0">
                 <div>
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
-                        System Overview
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+                        ADAR Insight Deck
                     </h2>
-                    <p className="text-white/40 mt-1 font-medium italic">Monitoring real-time node integrity and reporting trust.</p>
-                </div>
-                <div className="flex items-center gap-3 bg-white/5 p-2 rounded-2xl border border-white/5 self-start transition-all hover:bg-white/10 cursor-pointer" onClick={loadReports}>
-                    <Activity className={`w-4 h-4 text-cyber-dark-accent ${isLoading ? 'animate-spin' : ''}`} />
-                    <span className="text-sm font-semibold text-white/70 tracking-wide uppercase">Sync Nodes</span>
+                    <p className="text-[10px] text-white/40 mt-0.5 font-medium italic uppercase tracking-wider">Real-time service integrity & reporting trust mission control.</p>
                 </div>
             </header>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
                 <StatCard
                     icon={FileText}
                     label="Total Reports"
@@ -110,46 +157,76 @@ const Dashboard = ({ onViewReport }) => {
 
             {/* Analytics Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 glass-card p-6 flex flex-col gap-6">
+                <div className="lg:col-span-2 glass-card p-5 flex flex-col gap-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-cyber-dark-accent" />
-                            <h3 className="font-bold text-lg">Trust Integrity Wave</h3>
+                            <Activity className="w-4 h-4 text-cyber-dark-accent" />
+                            <h3 className="font-bold text-base">Signal Distribution</h3>
                         </div>
                         <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-2 h-2 rounded-full bg-cyber-dark-accent" />
-                                <span className="text-xs text-white/40 uppercase font-bold tracking-widest">Trust Index</span>
+                            <div className="flex items-center gap-3">
+                                {[
+                                    { label: 'Verified', color: '#06D6A0' },
+                                    { label: 'Flagged', color: '#FFBE0B' },
+                                    { label: 'Review', color: '#3A86FF' },
+                                    { label: 'Rejected', color: '#EF233C' }
+                                ].map(k => (
+                                    <div key={k.label} className="flex items-center gap-1.5">
+                                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: k.color }} />
+                                        <span className="text-[9px] text-white/40 uppercase font-black tracking-widest">{k.label}</span>
+                                    </div>
+                                ))}
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-2 h-2 rounded-full bg-white/20" />
-                                <span className="text-xs text-white/40 uppercase font-bold tracking-widest">Reports</span>
+
+                            <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
+                                <button
+                                    onClick={() => setViewType('daily')}
+                                    className={`px-2 py-1 rounded text-[8px] font-black uppercase tracking-tighter transition-all ${viewType === 'daily' ? 'bg-cyber-dark-accent text-white' : 'text-white/20 hover:text-white/40'}`}
+                                >
+                                    Daily
+                                </button>
+                                <button
+                                    onClick={() => setViewType('monthly')}
+                                    className={`px-3 py-1 rounded text-[8px] font-black uppercase tracking-tighter transition-all ${viewType === 'monthly' ? 'bg-cyber-dark-accent text-white' : 'text-white/40 hover:text-white'}`}
+                                >
+                                    Monthly
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <div className="h-72 w-full">
+                    <div className="h-[350px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={mockChartData}>
+                            <AreaChart data={chartData}>
                                 <defs>
-                                    <linearGradient id="colorTrust" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3A86FF" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#3A86FF" stopOpacity={0} />
-                                    </linearGradient>
+                                    <linearGradient id="colorVerified" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#00F5B8" stopOpacity={0.4} /><stop offset="95%" stopColor="#00F5B8" stopOpacity={0} /></linearGradient>
+                                    <linearGradient id="colorFlagged" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#FFBE0B" stopOpacity={0.4} /><stop offset="95%" stopColor="#FFBE0B" stopOpacity={0} /></linearGradient>
+                                    <linearGradient id="colorReview" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#4D94FF" stopOpacity={0.4} /><stop offset="95%" stopColor="#4D94FF" stopOpacity={0} /></linearGradient>
+                                    <linearGradient id="colorRejected" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#EF233C" stopOpacity={0.4} /><stop offset="95%" stopColor="#EF233C" stopOpacity={0} /></linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                                 <XAxis
                                     dataKey="name"
-                                    stroke="rgba(255,255,255,0.2)"
-                                    fontSize={12}
+                                    stroke="rgba(255,255,255,0.4)"
+                                    fontSize={10}
                                     tickLine={false}
                                     axisLine={false}
+                                    dy={10}
                                 />
                                 <YAxis
-                                    stroke="rgba(255,255,255,0.2)"
-                                    fontSize={12}
+                                    stroke="rgba(255,255,255,0.4)"
+                                    fontSize={10}
                                     tickLine={false}
                                     axisLine={false}
+                                    label={{
+                                        value: 'Reports',
+                                        angle: -90,
+                                        position: 'insideLeft',
+                                        fill: 'rgba(255,255,255,0.5)',
+                                        fontSize: 10,
+                                        fontWeight: 600,
+                                        dx: -5
+                                    }}
                                 />
                                 <Tooltip
                                     contentStyle={{
@@ -158,63 +235,20 @@ const Dashboard = ({ onViewReport }) => {
                                         borderRadius: '12px',
                                         fontSize: '12px'
                                     }}
-                                    itemStyle={{ color: '#fff' }}
+                                    itemStyle={{ fontSize: '10px', fontWeight: 'bold' }}
                                 />
-                                <Area
-                                    type="monotone"
-                                    dataKey="trust"
-                                    stroke="#3A86FF"
-                                    strokeWidth={3}
-                                    fillOpacity={1}
-                                    fill="url(#colorTrust)"
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="reports"
-                                    stroke="rgba(255,255,255,0.2)"
-                                    strokeWidth={2}
-                                    dot={false}
-                                />
+                                <Area type="monotone" dataKey="Verified" stroke="#00F5B8" strokeWidth={3} fillOpacity={1} fill="url(#colorVerified)" stackId="1" />
+                                <Area type="monotone" dataKey="Under Review" stroke="#4D94FF" strokeWidth={3} fillOpacity={1} fill="url(#colorReview)" stackId="1" />
+                                <Area type="monotone" dataKey="Flagged" stroke="#FFBE0B" strokeWidth={3} fillOpacity={1} fill="url(#colorFlagged)" stackId="1" />
+                                <Area type="monotone" dataKey="Rejected" stroke="#EF233C" strokeWidth={3} fillOpacity={1} fill="url(#colorRejected)" stackId="1" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
-                <div className="glass-card p-6 space-y-6">
-                    <h3 className="font-bold text-lg flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-cyber-dark-green" />
-                        Node Health
-                    </h3>
-                    <div className="space-y-6">
-                        {[
-                            { label: 'Frontend Cluster', status: 'Optimal', value: 98 },
-                            { label: 'Trust Engine', status: 'Analyzing', value: 84 },
-                            { label: 'Blockchain Sync', status: 'Lagging', value: 42 },
-                            { label: 'AI Inference', status: 'Optimal', value: 95 },
-                        ].map((node) => (
-                            <div key={node.label}>
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-medium text-white/70">{node.label}</span>
-                                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${node.value > 80 ? 'bg-cyber-dark-green/10 text-cyber-dark-green' :
-                                        node.value > 60 ? 'bg-cyber-dark-amber/10 text-cyber-dark-amber' : 'bg-cyber-dark-red/10 text-cyber-dark-red'
-                                        }`}>
-                                        {node.status}
-                                    </span>
-                                </div>
-                                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full transition-all duration-1000 ${node.value > 80 ? 'bg-cyber-dark-green' :
-                                            node.value > 60 ? 'bg-cyber-dark-amber' : 'bg-cyber-dark-red'
-                                            }`}
-                                        style={{ width: `${node.value}%` }}
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                {/* Right side left empty for future implementation */}
+                <div className="hidden lg:block"></div>
             </div>
-
         </div>
     );
 };

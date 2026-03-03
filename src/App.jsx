@@ -20,7 +20,7 @@ function App() {
         <div className="flex min-h-screen bg-cyber-dark text-white selection:bg-cyber-dark-accent/30">
             {!viewedReport && <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />}
 
-            <main className="flex-1 overflow-y-auto h-screen custom-scrollbar">
+            <main className="flex-1 overflow-hidden h-screen">
                 {viewedReport ? (
                     <ReportDetailsPage
                         report={viewedReport}

@@ -181,7 +181,7 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
                                 {report.status}
                             </span>
                         </div>
-                        <p className="text-white/40 mt-1 font-mono text-sm">Security Node Identification • Latency: 24ms</p>
+                        <p className="text-white/40 mt-1 font-mono text-sm">Security Service Identification • Latency: 24ms</p>
                     </div>
                 </div>
 
