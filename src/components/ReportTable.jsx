@@ -64,16 +64,16 @@ const ReportTable = ({ reports, onSelectReport }) => {
     });
 
     return (
-        <div className="glass-card overflow-hidden border-white/5">
-            <div className="p-6 border-b border-white/5 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="glass-card border-white/5 h-full flex flex-col overflow-hidden">
+            <div className="p-6 border-b border-white/5 flex flex-col md:flex-row gap-4 items-center justify-between shrink-0">
                 <div className="relative w-full md:w-96">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                     <input
                         type="text"
-                        placeholder="Search by 6-digit Report ID..."
+                        placeholder="Search by Report ID..."
                         value={searchTerm}
                         onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                            const val = e.target.value.toUpperCase();
                             setSearchTerm(val);
                         }}
                         className="w-full bg-[#0D1B2A] border border-white/5 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-cyber-dark-accent/50 transition-colors"
@@ -95,12 +95,14 @@ const ReportTable = ({ reports, onSelectReport }) => {
                             <option value="Verified" className="bg-[#16213E] text-white">Verified</option>
                             <option value="Under Review" className="bg-[#16213E] text-white">Under Review</option>
                             <option value="Flagged" className="bg-[#16213E] text-white">Flagged</option>
+                            <option value="Pending" className="bg-[#16213E] text-white">Pending</option>
+                            <option value="Rejected" className="bg-[#16213E] text-white">Rejected</option>
                         </select>
                     </div>
                 </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="flex-1 overflow-auto min-h-0 custom-scrollbar">
                 <table className="w-full text-left">
                     <thead>
                         <tr className="bg-white/2 pb-4">

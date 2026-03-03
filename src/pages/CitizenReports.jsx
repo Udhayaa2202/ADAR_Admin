@@ -30,8 +30,8 @@ const CitizenReports = ({ onViewReport }) => {
     }, []);
 
     return (
-        <div className="flex-1 p-8 space-y-8 max-w-7xl mx-auto font-sans">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex-1 p-8 space-y-8 max-w-7xl mx-auto font-sans h-full flex flex-col overflow-hidden">
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
                 <div>
                     <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
                         Citizen Reports
@@ -49,16 +49,16 @@ const CitizenReports = ({ onViewReport }) => {
                 </div>
             </header>
 
-            {isLoading ? (
-                <div className="py-20 flex flex-col items-center justify-center text-white/20">
-                    <Loader2 className="w-12 h-12 mb-4 animate-spin text-cyber-dark-accent" />
-                    <p className="text-lg font-medium">Fetching secure signal data...</p>
-                </div>
-            ) : (
-                <div className="space-y-4">
+            <div className="flex-1 min-h-0">
+                {isLoading ? (
+                    <div className="py-20 h-full flex flex-col items-center justify-center text-white/20">
+                        <Loader2 className="w-12 h-12 mb-4 animate-spin text-cyber-dark-accent" />
+                        <p className="text-lg font-medium">Fetching secure signal data...</p>
+                    </div>
+                ) : (
                     <ReportTable reports={reports} onSelectReport={onViewReport} />
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };
