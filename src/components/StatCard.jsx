@@ -28,8 +28,8 @@ const StatCard = ({ icon: Icon, label, value, color, trend }) => {
                 )}
             </div>
             <div>
-                <p className="text-white/50 text-sm font-medium mb-1 font-sans">{label}</p>
-                <h3 className="text-3xl font-bold tracking-tight group-hover:text-cyber-dark-accent transition-colors font-sans">
+                <p className="text-white/70 text-sm font-medium mb-1 font-sans truncate" title={label}>{label}</p>
+                <h3 className="text-3xl font-bold tracking-tight group-hover:text-cyber-dark-accent transition-colors font-sans tabular-nums">
                     {value}
                 </h3>
             </div>

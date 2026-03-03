@@ -17,9 +17,9 @@ import {
     Loader2,
     Maximize2,
     X
-} 
+}
 
-from 'lucide-react';
+    from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatTrustBreakdown, updateReportStatus, fetchAllReports } from '../services/dataService';
 import L from 'leaflet';
@@ -85,7 +85,7 @@ const computeRedZones = (reports) => {
                 }
             }
         }
-        
+
         if (cluster.length >= 2) {
             const avgLat = cluster.reduce((s, c) => s + c.lat, 0) / cluster.length;
             const avgLng = cluster.reduce((s, c) => s + c.lng, 0) / cluster.length;
@@ -196,7 +196,7 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
                 weight: 2,
                 dashArray: '6 4',
             }).addTo(map)
-              .bindPopup(`<b style="color:${zoneColor}">${zoneLabel}</b><br/>${zone.count} reports within 2km`);
+                .bindPopup(`<b style="color:${zoneColor}">${zoneLabel}</b><br/>${zone.count} reports within 2km`);
         });
 
         setTimeout(() => map.invalidateSize(), 100);
