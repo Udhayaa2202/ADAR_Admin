@@ -57,10 +57,10 @@ const Dashboard = ({ onViewReport }) => {
                 : date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 
             if (!dataMap[key]) {
-                dataMap[key] = { name: key, Verified: 0, Flagged: 0, 'Under Review': 0, Rejected: 0 };
+                dataMap[key] = { name: key, Approved: 0, Flagged: 0, 'Under Review': 0, Rejected: 0 };
             }
 
-            const status = report.status || 'Under Review';
+            const status = report.status === 'Verified' ? 'Approved' : (report.status || 'Under Review');
             if (dataMap[key].hasOwnProperty(status)) {
                 dataMap[key][status]++;
             }
@@ -166,7 +166,7 @@ const Dashboard = ({ onViewReport }) => {
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-3">
                                 {[
-                                    { label: 'Verified', color: '#06D6A0' },
+                                    { label: 'Approved', color: '#06D6A0' },
                                     { label: 'Flagged', color: '#FFBE0B' },
                                     { label: 'Review', color: '#3A86FF' },
                                     { label: 'Rejected', color: '#EF233C' }
@@ -199,7 +199,7 @@ const Dashboard = ({ onViewReport }) => {
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData}>
                                 <defs>
-                                    <linearGradient id="colorVerified" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#00F5B8" stopOpacity={0.4} /><stop offset="95%" stopColor="#00F5B8" stopOpacity={0} /></linearGradient>
+                                    <linearGradient id="colorApproved" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#00F5B8" stopOpacity={0.4} /><stop offset="95%" stopColor="#00F5B8" stopOpacity={0} /></linearGradient>
                                     <linearGradient id="colorFlagged" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#FFBE0B" stopOpacity={0.4} /><stop offset="95%" stopColor="#FFBE0B" stopOpacity={0} /></linearGradient>
                                     <linearGradient id="colorReview" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#4D94FF" stopOpacity={0.4} /><stop offset="95%" stopColor="#4D94FF" stopOpacity={0} /></linearGradient>
                                     <linearGradient id="colorRejected" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#EF233C" stopOpacity={0.4} /><stop offset="95%" stopColor="#EF233C" stopOpacity={0} /></linearGradient>
@@ -237,7 +237,7 @@ const Dashboard = ({ onViewReport }) => {
                                     }}
                                     itemStyle={{ fontSize: '10px', fontWeight: 'bold' }}
                                 />
-                                <Area type="monotone" dataKey="Verified" stroke="#00F5B8" strokeWidth={3} fillOpacity={1} fill="url(#colorVerified)" stackId="1" />
+                                <Area type="monotone" dataKey="Approved" stroke="#00F5B8" strokeWidth={3} fillOpacity={1} fill="url(#colorApproved)" stackId="1" />
                                 <Area type="monotone" dataKey="Under Review" stroke="#4D94FF" strokeWidth={3} fillOpacity={1} fill="url(#colorReview)" stackId="1" />
                                 <Area type="monotone" dataKey="Flagged" stroke="#FFBE0B" strokeWidth={3} fillOpacity={1} fill="url(#colorFlagged)" stackId="1" />
                                 <Area type="monotone" dataKey="Rejected" stroke="#EF233C" strokeWidth={3} fillOpacity={1} fill="url(#colorRejected)" stackId="1" />

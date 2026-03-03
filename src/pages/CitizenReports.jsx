@@ -36,7 +36,7 @@ const CitizenReports = ({ onViewReport }) => {
                     <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
                         Citizen Reports
                     </h2>
-                    <p className="text-white/40 mt-1 font-medium italic">Verified community signals and active incident reports.</p>
+                    <p className="text-white/40 mt-1 font-medium italic">Approved community signals and active incident reports.</p>
                 </div>
                 <div className="flex items-center gap-3 text-right">
                     <button

@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const StatusBadge = ({ status }) => {
     const styles = {
         'Verified': 'bg-[#06D6A0]/10 text-[#06D6A0] border-[#06D6A0]/20',
+        'Approved': 'bg-[#06D6A0]/10 text-[#06D6A0] border-[#06D6A0]/20',
         'Pending': 'bg-[#FFBE0B]/10 text-[#FFBE0B] border-[#FFBE0B]/20',
         'Flagged': 'bg-[#EF233C]/10 text-[#EF233C] border-[#EF233C]/20',
         'Under Review': 'bg-[#3A86FF]/10 text-[#3A86FF] border-[#3A86FF]/20',
@@ -20,6 +21,7 @@ const StatusBadge = ({ status }) => {
 
     const icons = {
         'Verified': CheckCircle2,
+        'Approved': CheckCircle2,
         'Pending': Clock,
         'Flagged': AlertCircle,
         'Under Review': Clock,
@@ -30,7 +32,7 @@ const StatusBadge = ({ status }) => {
     return (
         <span className={`status-badge border inline-flex items-center gap-1.5 ${styles[status]}`}>
             <Icon className="w-3.5 h-3.5" />
-            {status}
+            {status === 'Verified' ? 'Approved' : status}
         </span>
     );
 };
@@ -66,17 +68,18 @@ const ReportTable = ({ reports, onSelectReport }) => {
     return (
         <div className="glass-card border-white/5 h-full flex flex-col overflow-hidden">
             <div className="p-6 border-b border-white/5 flex flex-col md:flex-row gap-4 items-center justify-between shrink-0">
-                <div className="relative w-full md:w-96">
+                <div className="relative w-full md:w-80">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                     <input
                         type="text"
-                        placeholder="Search by Report ID..."
+                        inputMode="numeric"
+                        placeholder="Search by 6-digit ID (e.g. 267428)..."
                         value={searchTerm}
                         onChange={(e) => {
-                            const val = e.target.value.toUpperCase();
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 6);
                             setSearchTerm(val);
                         }}
-                        className="w-full bg-[#0D1B2A] border border-white/5 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-cyber-dark-accent/50 transition-colors"
+                        className="w-full bg-[#0D1B2A] border border-white/5 rounded-xl py-2.5 pl-10 pr-4 text-sm tracking-[0.2em] focus:outline-none focus:border-cyber-dark-accent/50 transition-colors placeholder:tracking-normal"
                     />
                 </div>
 
@@ -92,10 +95,9 @@ const ReportTable = ({ reports, onSelectReport }) => {
                             className="bg-transparent text-sm font-medium focus:outline-none cursor-pointer pr-2"
                         >
                             <option value="All" className="bg-[#16213E] text-white">All Status</option>
-                            <option value="Verified" className="bg-[#16213E] text-white">Verified</option>
+                            <option value="Verified" className="bg-[#16213E] text-white">Approved</option>
                             <option value="Under Review" className="bg-[#16213E] text-white">Under Review</option>
                             <option value="Flagged" className="bg-[#16213E] text-white">Flagged</option>
-                            <option value="Pending" className="bg-[#16213E] text-white">Pending</option>
                             <option value="Rejected" className="bg-[#16213E] text-white">Rejected</option>
                         </select>
                     </div>

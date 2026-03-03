@@ -49,11 +49,14 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
     const [selectedReasons, setSelectedReasons] = useState([]);
     const [previewImage, setPreviewImage] = useState(null);
     const [otherReason, setOtherReason] = useState("");
+    const [notification, setNotification] = useState({ message: '', type: '', visible: false });
+    const [localStatus, setLocalStatus] = useState(report?.status);
 
     useEffect(() => {
         setSelectedReasons([]);
         setOtherReason("");
         setShowRejectReasons(false);
+        setLocalStatus(report?.status);
     }, [report?.id]);
 
 
@@ -93,8 +96,24 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
             }
             const reasonString = finalReasons.join(', ');
             await updateReportStatus(report.id, newStatus, reasonString);
+
+            // Instantly update UI status
+            setLocalStatus(newStatus);
+
+            // Show notification
+            setNotification({
+                message: `Report ${newStatus === 'Verified' ? 'Approved' : newStatus} Successfully`,
+                type: newStatus,
+                visible: true
+            });
+
             if (onRefresh) await onRefresh();
-            onBack();
+
+            // Auto-hide notification
+            setTimeout(() => {
+                setNotification(prev => ({ ...prev, visible: false }));
+            }, 3000);
+
         } catch (error) {
             console.error("Failed to update status:", error);
             alert("Failed to update report status.");
@@ -131,6 +150,25 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
                             className="max-w-full max-h-full object-contain rounded-xl shadow-2xl border border-white/5"
                             onClick={(e) => e.stopPropagation()}
                         />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {notification.visible && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 50 }}
+                        className={`fixed top-8 right-8 z-[110] px-6 py-3 rounded-2xl border backdrop-blur-xl shadow-2xl flex items-center gap-3 font-bold uppercase tracking-wider text-xs ${notification.type === 'Verified' ? 'bg-[#06D6A0]/20 border-[#06D6A0]/50 text-[#06D6A0]' :
+                            notification.type === 'Rejected' ? 'bg-[#EF233C]/20 border-[#EF233C]/50 text-[#EF233C]' :
+                                'bg-[#FFBE0B]/20 border-[#FFBE0B]/50 text-[#FFBE0B]'
+                            }`}
+                    >
+                        {notification.type === 'Verified' ? <CheckCircle className="w-4 h-4" /> :
+                            notification.type === 'Rejected' ? <ShieldAlert className="w-4 h-4" /> :
+                                <AlertTriangle className="w-4 h-4" />}
+                        {notification.message}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -253,11 +291,12 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
                         <div>
                             <div className="flex items-center gap-3">
                                 <h2 className="text-3xl font-bold text-white">{report.id}</h2>
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest border ${report.status === 'Verified' ? 'bg-[#06D6A0]/10 text-[#06D6A0] border-[#06D6A0]/20' :
-                                    report.status === 'Flagged' ? 'bg-[#EF233C]/10 text-[#EF233C] border-[#EF233C]/20' :
-                                        'bg-[#FFBE0B]/10 text-[#FFBE0B] border-[#FFBE0B]/20'
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest border ${(localStatus === 'Verified' || localStatus === 'Approved') ? 'bg-[#06D6A0]/10 text-[#06D6A0] border-[#06D6A0]/20' :
+                                        localStatus === 'Rejected' ? 'bg-[#EF233C]/10 text-[#EF233C] border-[#EF233C]/20' :
+                                            localStatus === 'Flagged' ? 'bg-[#FFBE0B]/10 text-[#FFBE0B] border-[#FFBE0B]/20' :
+                                                'bg-[#FFBE0B]/10 text-[#FFBE0B] border-[#FFBE0B]/20'
                                     }`}>
-                                    {report.status}
+                                    {localStatus === 'Verified' ? 'Approved' : localStatus}
                                 </span>
                             </div>
 
@@ -265,8 +304,8 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
                     </div>
 
                     <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
-                        <div className="px-4 py-2 flex flex-col items-center">
-                            <span className="text-[10px] text-white/30 uppercase font-black">Trust Score</span>
+                        <div className="px-4 py-2 flex items-center gap-3">
+                            <span className="text-[10px] text-white/30 uppercase font-black whitespace-nowrap">Trust Score</span>
                             <span className={`text-xl font-black ${report.trustScore >= 80 ? 'text-cyber-dark-green' : report.trustScore >= 50 ? 'text-cyber-dark-amber' : 'text-cyber-dark-red'}`}>
                                 {report.trustScore}%
                             </span>
@@ -447,29 +486,38 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
                         <section className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <button
-                                    disabled={isUpdating}
+                                    disabled={isUpdating || localStatus === 'Verified' || localStatus === 'Approved'}
                                     onClick={() => handleStatusUpdate('Verified')}
-                                    className="flex items-center justify-center gap-2 bg-[#06D6A0] hover:bg-[#06D6A0]/90 disabled:opacity-50 text-[#0D1B2A] font-black py-4 rounded-2xl transition-all shadow-xl shadow-[#06D6A0]/10 uppercase text-xs tracking-widest"
+                                    className={`flex items-center justify-center gap-2 flex-1 font-black py-4 rounded-2xl transition-all shadow-xl uppercase text-xs tracking-widest ${(localStatus === 'Verified' || localStatus === 'Approved')
+                                            ? 'bg-[#06D6A0]/20 text-[#06D6A0] border border-[#06D6A0]/20 cursor-default'
+                                            : 'bg-[#06D6A0] hover:bg-[#06D6A0]/90 text-[#0D1B2A] shadow-[#06D6A0]/10'
+                                        }`}
                                 >
                                     <CheckCircle className="w-5 h-5" />
-                                    Approve
+                                    {(localStatus === 'Verified' || localStatus === 'Approved') ? 'Approved' : 'Approve'}
                                 </button>
                                 <button
-                                    disabled={isUpdating}
+                                    disabled={isUpdating || localStatus === 'Rejected'}
                                     onClick={() => setShowRejectReasons(true)}
-                                    className="flex items-center justify-center gap-2 bg-[#EF233C] hover:bg-[#EF233C]/90 disabled:opacity-50 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-[#EF233C]/10 uppercase text-xs tracking-widest"
+                                    className={`flex items-center justify-center gap-2 flex-1 font-black py-4 rounded-2xl transition-all shadow-xl uppercase text-xs tracking-widest ${localStatus === 'Rejected'
+                                        ? 'bg-[#EF233C]/20 text-[#EF233C] border border-[#EF233C]/20 cursor-default'
+                                        : 'bg-[#EF233C] hover:bg-[#EF233C]/90 text-white shadow-[#EF233C]/10'
+                                        }`}
                                 >
                                     <Trash2 className="w-5 h-5" />
-                                    Reject
+                                    {localStatus === 'Rejected' ? 'Rejected' : 'Reject'}
                                 </button>
                             </div>
                             <button
-                                disabled={isUpdating}
+                                disabled={isUpdating || localStatus === 'Flagged'}
                                 onClick={() => handleStatusUpdate('Flagged')}
-                                className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 disabled:opacity-50 text-white font-black py-4 rounded-2xl transition-all border border-white/5 uppercase text-xs tracking-widest"
+                                className={`w-full flex items-center justify-center gap-2 font-black py-4 rounded-2xl transition-all border uppercase text-xs tracking-widest ${localStatus === 'Flagged'
+                                    ? 'bg-[#FFBE0B]/10 text-[#FFBE0B] border-[#FFBE0B]/20 cursor-default'
+                                    : 'bg-white/5 hover:bg-white/10 text-white border-white/5'
+                                    }`}
                             >
-                                <AlertTriangle className="w-5 h-5 text-[#FFBE0B]" />
-                                Flag Incident
+                                <AlertTriangle className={`w-5 h-5 ${localStatus === 'Flagged' ? 'text-[#FFBE0B]' : 'text-[#FFBE0B]'}`} />
+                                {localStatus === 'Flagged' ? 'Flagged' : 'Flag Incident'}
                             </button>
                         </section>
                     </div>
