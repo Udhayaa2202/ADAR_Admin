@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     ArrowLeft,
     MapPin,
@@ -17,9 +17,83 @@ import {
     Loader2,
     Maximize2,
     X
-} from 'lucide-react';
+} 
+
+from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatTrustBreakdown, updateReportStatus } from '../services/dataService';
+import { formatTrustBreakdown, updateReportStatus, fetchAllReports } from '../services/dataService';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+const getDistanceKm = (lat1, lng1, lat2, lng2) => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+const parseReportCoords = (r) => {
+    let lat = r.lat ? parseFloat(r.lat) : null;
+    let lng = r.lng ? parseFloat(r.lng) : null;
+    if (!lat || !lng) {
+        const m = (r.location || '').match(/\(?\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*\)?/);
+        if (m) { lat = parseFloat(m[1]); lng = parseFloat(m[2]); }
+    }
+    return (lat && lng && !isNaN(lat) && !isNaN(lng)) ? { lat, lng } : null;
+};
+
+// Cluster reports using DBSCAN-style connected-component clustering
+// Each report has a 2km influence zone. If report B is within 2km of ANY
+// report already in a cluster, B joins that cluster (chaining effect).
+// Clusters with 3+ reports = RED ZONES
+
+const ZONE_RADIUS_KM = 2;
+
+const computeRedZones = (reports) => {
+    const coords = reports.map(r => parseReportCoords(r)).filter(Boolean);
+    const n = coords.length;
+    if (n === 0) return [];
+
+    // Build adjacency: which points are within 2km of each other
+    const neighbors = Array.from({ length: n }, () => []);
+    for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+            if (getDistanceKm(coords[i].lat, coords[i].lng, coords[j].lat, coords[j].lng) <= ZONE_RADIUS_KM) {
+                neighbors[i].push(j);
+                neighbors[j].push(i);
+            }
+        }
+    }
+
+    // BFS to find connected components
+    const visited = new Set();
+    const clusters = [];
+
+    for (let i = 0; i < n; i++) {
+        if (visited.has(i)) continue;
+        const cluster = [];
+        const queue = [i];
+        visited.add(i);
+        while (queue.length > 0) {
+            const curr = queue.shift();
+            cluster.push(coords[curr]);
+            for (const nb of neighbors[curr]) {
+                if (!visited.has(nb)) {
+                    visited.add(nb);
+                    queue.push(nb);
+                }
+            }
+        }
+        
+        if (cluster.length >= 2) {
+            const avgLat = cluster.reduce((s, c) => s + c.lat, 0) / cluster.length;
+            const avgLng = cluster.reduce((s, c) => s + c.lng, 0) / cluster.length;
+            clusters.push({ lat: avgLat, lng: avgLng, count: cluster.length });
+        }
+    }
+    return clusters;
+};
 
 const DeductionItem = ({ label, value, type }) => (
     <div className="flex justify-between items-center py-3 text-sm border-b border-white/5 last:border-0">
@@ -51,6 +125,20 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
     const [otherReason, setOtherReason] = useState("");
     const [notification, setNotification] = useState({ message: '', type: '', visible: false });
     const [localStatus, setLocalStatus] = useState(report?.status);
+    const [allReports, setAllReports] = useState([]);
+    const mapRef = useRef(null);
+    const mapInstanceRef = useRef(null);
+
+    let mapLat = report?.lat ? parseFloat(report.lat) : null;
+    let mapLng = report?.lng ? parseFloat(report.lng) : null;
+    if (!mapLat || !mapLng) {
+        const coordMatch = (report?.location || '').match(/\(?\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*\)?/);
+        if (coordMatch) {
+            mapLat = parseFloat(coordMatch[1]);
+            mapLng = parseFloat(coordMatch[2]);
+        }
+    }
+    const hasCoordinates = mapLat !== null && mapLng !== null && !isNaN(mapLat) && !isNaN(mapLng);
 
     useEffect(() => {
         setSelectedReasons([]);
@@ -59,6 +147,67 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
         setLocalStatus(report?.status);
     }, [report?.id]);
 
+    // Fetch all reports for red zone computation
+    useEffect(() => {
+        fetchAllReports().then(setAllReports).catch(console.error);
+    }, []);
+
+    // Initialize Leaflet map
+    useEffect(() => {
+        if (!hasCoordinates || !mapRef.current) return;
+
+        if (mapInstanceRef.current) {
+            mapInstanceRef.current.remove();
+            mapInstanceRef.current = null;
+        }
+
+        const map = L.map(mapRef.current).setView([mapLat, mapLng], 15);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+        }).addTo(map);
+
+        const markerIcon = L.icon({
+            iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+            iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+        });
+
+        L.marker([mapLat, mapLng], { icon: markerIcon })
+            .addTo(map)
+            .bindPopup(`<b>${report?.id || 'Report'}</b><br/>${report?.location || 'Incident Location'}`);
+
+        mapInstanceRef.current = map;
+
+        const zones = computeRedZones(allReports);
+        zones.forEach(zone => {
+            const isRed = zone.count >= 3;
+            const zoneColor = isRed ? '#EF233C' : '#FFBE0B';
+            const zoneLabel = isRed ? '⚠ RED ZONE' : '⚠ WATCH ZONE';
+            const zoneFill = isRed ? 0.15 : 0.10;
+
+            L.circle([zone.lat, zone.lng], {
+                radius: 2000,
+                color: zoneColor,
+                fillColor: zoneColor,
+                fillOpacity: zoneFill,
+                weight: 2,
+                dashArray: '6 4',
+            }).addTo(map)
+              .bindPopup(`<b style="color:${zoneColor}">${zoneLabel}</b><br/>${zone.count} reports within 2km`);
+        });
+
+        setTimeout(() => map.invalidateSize(), 100);
+
+        return () => {
+            if (mapInstanceRef.current) {
+                mapInstanceRef.current.remove();
+                mapInstanceRef.current = null;
+            }
+        };
+    }, [hasCoordinates, mapLat, mapLng, report?.id, allReports]);
 
     if (!report) return null;
 
@@ -97,10 +246,8 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
             const reasonString = finalReasons.join(', ');
             await updateReportStatus(report.id, newStatus, reasonString);
 
-            // Instantly update UI status
             setLocalStatus(newStatus);
 
-            // Show notification
             setNotification({
                 message: `Report ${newStatus === 'Verified' ? 'Approved' : newStatus} Successfully`,
                 type: newStatus,
@@ -109,7 +256,6 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
 
             if (onRefresh) await onRefresh();
 
-            // Auto-hide notification
             setTimeout(() => {
                 setNotification(prev => ({ ...prev, visible: false }));
             }, 3000);
@@ -292,9 +438,9 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
                             <div className="flex items-center gap-3">
                                 <h2 className="text-3xl font-bold text-white">{report.id}</h2>
                                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest border ${(localStatus === 'Verified' || localStatus === 'Approved') ? 'bg-[#06D6A0]/10 text-[#06D6A0] border-[#06D6A0]/20' :
-                                        localStatus === 'Rejected' ? 'bg-[#EF233C]/10 text-[#EF233C] border-[#EF233C]/20' :
-                                            localStatus === 'Flagged' ? 'bg-[#FFBE0B]/10 text-[#FFBE0B] border-[#FFBE0B]/20' :
-                                                'bg-[#FFBE0B]/10 text-[#FFBE0B] border-[#FFBE0B]/20'
+                                    localStatus === 'Rejected' ? 'bg-[#EF233C]/10 text-[#EF233C] border-[#EF233C]/20' :
+                                        localStatus === 'Flagged' ? 'bg-[#FFBE0B]/10 text-[#FFBE0B] border-[#FFBE0B]/20' :
+                                            'bg-[#FFBE0B]/10 text-[#FFBE0B] border-[#FFBE0B]/20'
                                     }`}>
                                     {localStatus === 'Verified' ? 'Approved' : localStatus}
                                 </span>
@@ -383,18 +529,9 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="md:col-span-2">
-                                    {report.lat && report.lng ? (
+                                    {hasCoordinates ? (
                                         <div className="w-full h-[450px] rounded-xl border border-white/10 overflow-hidden bg-white/5">
-                                            <iframe
-                                                width="100%"
-                                                height="100%"
-                                                frameBorder="0"
-                                                scrolling="no"
-                                                marginHeight="0"
-                                                marginWidth="0"
-                                                src={`https://maps.google.com/maps?q=${report.lat},${report.lng}&z=15&output=embed`}
-                                                className="grayscale opacity-70 contrast-125"
-                                            />
+                                            <div ref={mapRef} style={{ height: '100%', width: '100%' }} />
                                         </div>
                                     ) : (
                                         <div className="w-full aspect-video rounded-xl border border-white/5 border-dashed flex flex-col items-center justify-center bg-white/[0.02] opacity-20">
@@ -416,8 +553,35 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
                                             <span className="text-white/40 uppercase font-bold">Coordinates</span>
                                         </div>
                                         <span className="font-mono text-white/70">
-                                            {report.lat ? `${report.lat}, ${report.lng}` : 'N/A'}
+                                            {hasCoordinates ? `${mapLat}, ${mapLng}` : 'N/A'}
                                         </span>
+                                    </div>
+                                    {/* Zone Legend */}
+                                    <div className="bg-white/[0.02] p-4 rounded-xl border border-white/5 space-y-3">
+                                        <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest">Zone Indicators</p>
+                                        <div className="space-y-2.5">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-4 h-4 rounded-full border-2 border-dashed border-[#EF233C] bg-[#EF233C]/20 shrink-0" />
+                                                <div>
+                                                    <p className="text-[11px] font-bold text-[#EF233C]">Red Zone</p>
+                                                    <p className="text-[9px] text-white/40">3+ reports within 2km</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-4 h-4 rounded-full border-2 border-dashed border-[#FFBE0B] bg-[#FFBE0B]/20 shrink-0" />
+                                                <div>
+                                                    <p className="text-[11px] font-bold text-[#FFBE0B]">Watch Zone</p>
+                                                    <p className="text-[9px] text-white/40">2 reports within 2km</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-4 h-4 rounded-full border-2 border-[#3A86FF] bg-[#3A86FF]/20 shrink-0" />
+                                                <div>
+                                                    <p className="text-[11px] font-bold text-[#3A86FF]">Single Report</p>
+                                                    <p className="text-[9px] text-white/40">No zone — marker only</p>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -489,8 +653,8 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
                                     disabled={isUpdating || localStatus === 'Verified' || localStatus === 'Approved'}
                                     onClick={() => handleStatusUpdate('Verified')}
                                     className={`flex items-center justify-center gap-2 flex-1 font-black py-4 rounded-2xl transition-all shadow-xl uppercase text-xs tracking-widest ${(localStatus === 'Verified' || localStatus === 'Approved')
-                                            ? 'bg-[#06D6A0]/20 text-[#06D6A0] border border-[#06D6A0]/20 cursor-default'
-                                            : 'bg-[#06D6A0] hover:bg-[#06D6A0]/90 text-[#0D1B2A] shadow-[#06D6A0]/10'
+                                        ? 'bg-[#06D6A0]/20 text-[#06D6A0] border border-[#06D6A0]/20 cursor-default'
+                                        : 'bg-[#06D6A0] hover:bg-[#06D6A0]/90 text-[#0D1B2A] shadow-[#06D6A0]/10'
                                         }`}
                                 >
                                     <CheckCircle className="w-5 h-5" />
