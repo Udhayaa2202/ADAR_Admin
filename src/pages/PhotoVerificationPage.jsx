@@ -1,21 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ShieldCheck, MapPin, AlertCircle, CheckCircle2, XCircle, ArrowRight, ShieldAlert, Image as ImageIcon, Navigation } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ShieldCheck, MapPin, AlertCircle, CheckCircle2, XCircle, ArrowLeft, ArrowRight, ShieldAlert, Image as ImageIcon, Navigation, History, RefreshCcw, Search, FileText } from 'lucide-react';
+import { fetchAllReports } from '../services/dataService';
 
-const PhotoVerificationPage = ({ report, onNavigate }) => {
-    const [verificationStep, setVerificationStep] = useState(0);
-    const [results, setResults] = useState(null);
+// --- SHARED VERIFICATION ENGINE ---
+const getDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+};
+
+const runVerificationLogic = (report) => {
+    if (!report) return null;
 
     const reportedLocation = report?.location || "Unknown Location";
-
-    // Prioritize high-precision incident coordinates from our new map picker sync
     const reportedLat = report?.incidentLat || report?.latitude || 12.9716;
     const reportedLon = report?.incidentLon || report?.longitude || 77.5946;
     const reportedCoords = `${parseFloat(reportedLat).toFixed(4)}° N, ${parseFloat(reportedLon).toFixed(4)}° E`;
 
-    const isLive = report?.capturedLive === true || report?.captureSource === 'Live';
+    const isLive = report?.capturedLive === true ||
+        report?.captureSource === 'Live' ||
+        report?.captureSource === 'Camera' ||
+        report?.metadata?.source === 'live';
 
-    // --- REAL DATA RESOLUTION ---
+    const captureMethod = isLive ? 'LIVE_SECURE' : (report?.captureSource || 'GALLERY_UPLOAD');
+
     let evidenceCity = "Unknown";
     let evidenceLocation = "No Metadata Found";
     let evidenceCoords = "0.0000° N, 0.0000° E";
@@ -24,13 +39,12 @@ const PhotoVerificationPage = ({ report, onNavigate }) => {
     let evLat = null;
     let evLon = null;
 
-    if (report?.photoLocation) {
+    if (report?.photoLocation && typeof report.photoLocation === 'string') {
         const parts = report.photoLocation.split(',');
         if (parts.length === 2 && !isNaN(parseFloat(parts[0]))) {
             evLat = parseFloat(parts[0]);
             evLon = parseFloat(parts[1]);
             evidenceCoords = `${evLat.toFixed(4)}° N, ${evLon.toFixed(4)}° E`;
-            // If we have a source flag from the database, use it
             dataLabel = report.photoLocationSource === 'device_signature' ? 'DEVICE_SIGNATURE' : 'VERIFIED_EXIF';
             evidenceCity = "Extracted Location";
             evidenceLocation = `Coord-Stamped (${dataLabel === 'DEVICE_SIGNATURE' ? 'Hardware' : 'Metadata'})`;
@@ -47,26 +61,11 @@ const PhotoVerificationPage = ({ report, onNavigate }) => {
         evLat = report?.latitude;
         evLon = report?.longitude;
     } else {
-        // Fallback for cases with no metadata at all
         isDataSimulated = true;
         evidenceCity = "Unknown";
         evidenceLocation = "No forensic metadata attached";
         evidenceCoords = "Data Unavailable";
     }
-
-    // --- MATCHING ENGINE (STRICT) ---
-    // Distance check helper (Haversine)
-    const getDistance = (lat1, lon1, lat2, lon2) => {
-        if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-        const R = 6371; // km
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-    };
 
     const reportedCityName = reportedLocation.split(/[\s,]+/)[0].trim().toLowerCase();
     const evidenceCityName = evidenceCity.trim().toLowerCase();
@@ -76,71 +75,206 @@ const PhotoVerificationPage = ({ report, onNavigate }) => {
 
     if (!isDataSimulated) {
         if (isLive) {
-            locationsMatch = true; // Live photos are intrinsically verified
+            locationsMatch = true;
         } else if (evLat && evLon && reportedLat && reportedLon) {
             distance = getDistance(evLat, evLon, reportedLat, reportedLon);
-            // Consider a match if within 5km (for urban precision)
             locationsMatch = distance !== null && distance < 5;
         } else if (evidenceCity !== "Unknown") {
             locationsMatch = reportedCityName === evidenceCityName;
         }
     }
 
-    const mockVerification = {
+    return {
         reportedLocation,
         reportedCoords,
         evidenceLocation,
         evidenceCoords,
         isMatch: report?.forceFake ? false : locationsMatch,
         isLive,
+        captureMethod,
         isDataSimulated,
         dataLabel,
         distance: distance ? distance.toFixed(2) : null
     };
+};
 
-    useEffect(() => {
-        if (!report) return;
+const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, onSelectReport, onViewReport }) => {
+    const [verificationStep, setVerificationStep] = useState(results ? 3 : 0);
+    const [localResults, setLocalResults] = useState(results);
+    const [historyReports, setHistoryReports] = useState([]);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
 
-        // Reset steps on report change
+    const currentVerification = runVerificationLogic(report);
+
+    const startVerification = () => {
         setVerificationStep(0);
-        setResults(null);
+        setLocalResults(null);
+        onScanComplete?.(null);
 
-        // Simulate verification process
-        const timer1 = setTimeout(() => setVerificationStep(1), 1000);
-        const timer2 = setTimeout(() => setVerificationStep(2), 2000);
+        const timer1 = setTimeout(() => setVerificationStep(1), 800);
+        const timer2 = setTimeout(() => setVerificationStep(2), 1600);
         const timer3 = setTimeout(() => {
             setVerificationStep(3);
-            setResults(mockVerification);
-        }, 3000);
+            const res = runVerificationLogic(report);
+            setLocalResults(res);
+            onScanComplete?.(res);
+        }, 2400);
 
-        return () => {
-            clearTimeout(timer1);
-            clearTimeout(timer2);
-            clearTimeout(timer3);
-        };
-    }, [report]);
+        return [timer1, timer2, timer3];
+    };
+
+    useEffect(() => {
+        if (!report) {
+            setIsLoadingHistory(true);
+            fetchAllReports()
+                .then(reports => setHistoryReports(Array.isArray(reports) ? reports : []))
+                .catch(console.error)
+                .finally(() => setIsLoadingHistory(false));
+            return;
+        }
+
+        // If we already have results (e.g. returning from details), don't auto-scan
+        if (results) {
+            setVerificationStep(3);
+            setLocalResults(results);
+            return;
+        }
+
+        const timers = startVerification();
+
+        return () => timers.forEach(clearTimeout);
+    }, [report]); // Only re-run if report ID changes
 
     if (!report) {
+        const filteredHistory = (historyReports || []).filter(r =>
+            (r?.id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (r?.userId && typeof r.userId === 'string' && r.userId.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+
         return (
-            <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-cyber-dark/50 backdrop-blur-sm">
-                <div className="relative mb-8">
-                    <div className="absolute inset-0 bg-cyber-dark-accent/20 blur-3xl rounded-full" />
-                    <div className="relative p-8 bg-white/5 border border-white/10 rounded-full">
-                        <ImageIcon className="w-20 h-20 text-cyber-dark-accent opacity-50" />
+            <div className="h-full overflow-y-auto custom-scrollbar p-8 bg-cyber-dark flex flex-col">
+                <div className="max-w-7xl mx-auto w-full space-y-8 flex-1 flex flex-col min-h-0">
+                    <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-cyber-dark-accent mb-2">
+                                <History className="w-5 h-5" />
+                                <span className="text-xs font-black uppercase tracking-[0.2em]">Forensic Audit Log</span>
+                            </div>
+                            <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Verification History</h1>
+                            <p className="text-white/40 font-mono text-xs uppercase tracking-widest leading-relaxed">
+                                Review forensic data for all submitted citizen reports
+                            </p>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => onNavigate('citizen-reports')}
+                                className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl flex items-center gap-3 transition-all group"
+                            >
+                                <FileText className="w-4 h-4 text-cyber-dark-accent group-hover:scale-110 transition-transform" />
+                                <span className="text-[10px] text-white/70 uppercase font-black tracking-widest whitespace-nowrap">Go to Reports</span>
+                            </button>
+                            <div className="relative group">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-cyber-dark-accent transition-colors" />
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder="Search Report ID or User..."
+                                    className="pl-12 pr-6 py-3 bg-white/5 border border-white/10 rounded-2xl text-sm text-white focus:outline-none focus:border-cyber-dark-accent/50 w-full md:w-[350px] transition-all"
+                                />
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="flex-1 min-h-0 glass-card border-white/5 flex flex-col overflow-hidden">
+                        {isLoadingHistory ? (
+                            <div className="flex-1 flex flex-col items-center justify-center p-20 gap-4 opacity-50">
+                                <RefreshCcw className="w-8 h-8 animate-spin text-cyber-dark-accent" />
+                                <p className="text-xs font-black uppercase tracking-widest">Compiling Forensic Database...</p>
+                            </div>
+                        ) : (
+                            <div className="flex-1 overflow-auto custom-scrollbar">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="bg-[#16213E] sticky top-0 z-10 border-b border-white/5">
+                                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Report ID</th>
+                                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Forensic Status</th>
+                                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Trust Score</th>
+                                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Activity / Location</th>
+                                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em] text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {filteredHistory.map((r) => {
+                                            const v = runVerificationLogic(r);
+                                            return (
+                                                <motion.tr
+                                                    key={r.id}
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    exit={{ opacity: 0 }}
+                                                    className="hover:bg-white/2 transition-colors cursor-pointer group"
+                                                    onClick={() => onSelectReport(r)}
+                                                >
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-mono text-sm font-bold text-cyber-dark-accent">{r.id}</span>
+                                                            <span className="text-[9px] text-white/30 font-black uppercase">{r.userId || 'Anonymous'}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`px-2.5 py-1 rounded text-[10px] font-black uppercase border tracking-tighter ${v.isMatch ? 'bg-[#06D6A0]/10 text-[#06D6A0] border-[#06D6A0]/20' : 'bg-[#EF233C]/10 text-[#EF233C] border-[#EF233C]/20'}`}>
+                                                            {v.isMatch ? 'MATCH' : 'MISMATCH'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-20 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                                                <div
+                                                                    className={`h-full ${r.trustScore >= 80 ? 'bg-cyber-dark-green' : r.trustScore >= 50 ? 'bg-cyber-dark-amber' : 'bg-cyber-dark-red'} transition-all`}
+                                                                    style={{ width: `${r.trustScore}%` }}
+                                                                />
+                                                            </div>
+                                                            <span className={`text-xs font-black ${r.trustScore >= 80 ? 'text-cyber-dark-green' : r.trustScore >= 50 ? 'text-cyber-dark-amber' : 'text-cyber-dark-red'}`}>
+                                                                {r.trustScore}%
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col max-w-[200px]">
+                                                            <span className="text-white font-bold text-[11px] truncate uppercase">{r.activity_type || 'INCIDENT'}</span>
+                                                            <span className="text-white/40 text-[10px] truncate">{r.location || 'Unknown'}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                onSelectReport(r);
+                                                            }}
+                                                            className="px-4 py-2 bg-white/5 hover:bg-cyber-dark-accent rounded-xl text-[10px] font-black text-white/40 hover:text-white border border-white/5 hover:border-cyber-dark-accent transition-all flex items-center gap-2 ml-auto uppercase italic tracking-widest group/btn"
+                                                        >
+                                                            <RefreshCcw className="w-3 h-3 group-hover/btn:rotate-180 transition-transform duration-500" />
+                                                            Re-Scan
+                                                        </button>
+                                                    </td>
+                                                </motion.tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+
+                                {filteredHistory.length === 0 && (
+                                    <div className="py-20 flex flex-col items-center justify-center text-white/20">
+                                        <Search className="w-12 h-12 mb-4 opacity-10" />
+                                        <p className="text-sm font-black uppercase tracking-[0.2em]">No forensic records match your search</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
-                </div>
-                <h2 className="text-3xl font-black text-white tracking-tighter uppercase italic mb-3">
-                    Verification Engine Standby
-                </h2>
-                <div className="text-white/40 text-sm max-w-md mx-auto leading-relaxed border-t border-white/5 pt-4">
-                    The forensic analysis module is currently idle. Select a report from the {" "}
-                    <button
-                        onClick={() => onNavigate('citizen-reports')}
-                        className="text-cyber-dark-accent font-bold hover:underline transition-all"
-                    >
-                        Citizen Reports
-                    </button>
-                    {" "} and click <span className="text-white font-bold italic">"Send for Verification"</span> to begin metadata extraction.
                 </div>
             </div>
         );
@@ -151,20 +285,42 @@ const PhotoVerificationPage = ({ report, onNavigate }) => {
             <div className="max-w-5xl mx-auto space-y-8">
                 {/* Header Section */}
                 <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-cyber-dark-accent mb-2">
-                            <ShieldCheck className="w-5 h-5" />
-                            <span className="text-xs font-black uppercase tracking-[0.2em]">Forensic Analysis</span>
+                    <div className="flex gap-4">
+                        <button
+                            onClick={() => onSelectReport(null)}
+                            className="p-2 hover:bg-white/5 rounded-xl transition-all text-white/50 hover:text-white border border-white/5 h-fit mt-auto mb-1"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                        </button>
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-cyber-dark-accent mb-2">
+                                <ShieldCheck className="w-5 h-5" />
+                                <span className="text-xs font-black uppercase tracking-[0.2em]">Forensic Analysis</span>
+                            </div>
+                            <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Photo Verification</h1>
+                            <p className="text-white/40 font-mono text-xs uppercase tracking-widest leading-relaxed">Report ID: {report.id}</p>
                         </div>
-                        <h1 className="text-4xl font-black text-white tracking-tighter">PHOTO VERIFICATION</h1>
-                        <p className="text-white/40 font-mono text-sm uppercase tracking-wider">Report ID: {report.id}</p>
                     </div>
 
                     <div className="flex gap-4">
+                        <button
+                            onClick={startVerification}
+                            className="px-6 py-3 bg-cyber-dark-accent/10 hover:bg-cyber-dark-accent/20 border border-cyber-dark-accent/30 rounded-2xl flex items-center gap-3 transition-all group"
+                        >
+                            <RefreshCcw className="w-4 h-4 text-cyber-dark-accent group-hover:rotate-180 transition-transform duration-500" />
+                            <span className="text-[10px] text-white/70 uppercase font-black tracking-widest">Rescan</span>
+                        </button>
+                        <button
+                            onClick={() => onViewReport(report)}
+                            className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl flex items-center gap-3 transition-all group"
+                        >
+                            <FileText className="w-4 h-4 text-cyber-dark-accent group-hover:scale-110 transition-transform" />
+                            <span className="text-[10px] text-white/70 uppercase font-black tracking-widest">View Full Report</span>
+                        </button>
                         <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl flex flex-col gap-1 min-w-[150px]">
                             <span className="text-[10px] text-white/40 uppercase font-black">Meta Integrity</span>
-                            <span className={`text-sm font-bold ${results ? (results.isMatch ? 'text-cyber-dark-green' : 'text-cyber-dark-red') : 'text-white/20'}`}>
-                                {results ? (results.isMatch ? 'TRUSTED_NODE' : 'TAMPERED_METADATA') : 'ANALYZING...'}
+                            <span className={`text-sm font-bold ${localResults ? (localResults.isMatch ? 'text-cyber-dark-green' : 'text-cyber-dark-red') : 'text-white/20'}`}>
+                                {localResults ? (localResults.isMatch ? 'MATCH' : 'MISMATCH') : 'ANALYZING...'}
                             </span>
                         </div>
                     </div>
@@ -202,30 +358,30 @@ const PhotoVerificationPage = ({ report, onNavigate }) => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.5 }}
-                            className="glass-card p-6 flex items-center justify-between border-l-4 border-l-cyber-dark-accent"
+                            className="glass-card p-6 flex items-center justify-between border-l-4 border-l-cyber-dark-accent mb-auto"
                         >
                             <div className="flex items-center gap-4">
-                                <div className={`p-3 rounded-2xl ${results ? (results.isLive ? 'bg-cyber-dark-green/20' : 'bg-cyber-dark-amber/20') : 'bg-white/5'}`}>
-                                    <ShieldCheck className={`w-6 h-6 ${results ? (results.isLive ? 'text-cyber-dark-green' : 'text-cyber-dark-amber') : 'text-white/20'}`} />
+                                <div className={`p-3 rounded-2xl ${localResults ? (localResults.isLive ? 'bg-cyber-dark-green/20' : 'bg-cyber-dark-amber/20') : 'bg-white/5'}`}>
+                                    <ShieldCheck className={`w-6 h-6 ${localResults ? (localResults.isLive ? 'text-cyber-dark-green' : 'text-cyber-dark-amber') : 'text-white/20'}`} />
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Capture Source</p>
                                     <h4 className="text-white font-bold text-lg">
-                                        {results ? (results.isLive ? 'LIVE CAMERA' : 'GALLERY UPLOAD') : 'DETECTING SOURCE...'}
+                                        {localResults ? (localResults.isLive ? 'LIVE CAMERA' : 'GALLERY UPLOAD') : 'DETECTING SOURCE...'}
                                     </h4>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <span className={`text-[10px] font-black px-2 py-1 rounded border uppercase tracking-widest ${results ? (results.isLive ? 'bg-cyber-dark-green/10 border-cyber-dark-green/20 text-cyber-dark-green' : 'bg-cyber-dark-amber/10 border-cyber-dark-amber/20 text-cyber-dark-amber') : 'bg-white/5 border-white/5 text-white/20'}`}>
-                                    {results ? (results.isLive ? 'SECURE_STREAM' : 'UNVERIFIED_DATA') : 'SCANNING'}
+                                <span className={`text-[10px] font-black px-2 py-1 rounded border uppercase tracking-widest ${localResults ? (localResults.isLive ? 'bg-cyber-dark-green/10 border-cyber-dark-green/20 text-cyber-dark-green' : 'bg-cyber-dark-amber/10 border-cyber-dark-amber/20 text-cyber-dark-amber') : 'bg-white/5 border-white/5 text-white/20'}`}>
+                                    {localResults ? (localResults.isLive ? 'SECURE_STREAM' : 'UNVERIFIED_DATA') : 'SCANNING'}
                                 </span>
                             </div>
                         </motion.div>
                     </div>
 
                     {/* Metadata Logic */}
-                    <div className="space-y-6 flex flex-col justify-center">
-                        <div className="glass-card p-8 space-y-8 relative overflow-hidden">
+                    <div className="flex flex-col h-full min-h-0">
+                        <div className="glass-card p-6 space-y-6 relative overflow-hidden h-full flex flex-col justify-between">
                             {/* Scanning Animation */}
                             {verificationStep < 3 && (
                                 <motion.div
@@ -243,15 +399,15 @@ const PhotoVerificationPage = ({ report, onNavigate }) => {
 
                                 <div className="space-y-4">
                                     {/* Reported Location */}
-                                    <div className={`p-5 rounded-2xl border transition-all duration-500 ${verificationStep >= 1 ? 'bg-white/5 border-white/10' : 'opacity-20 border-white/5'}`}>
+                                    <div className={`p-4 rounded-2xl border transition-all duration-500 ${verificationStep >= 1 ? 'bg-white/5 border-white/10' : 'opacity-20 border-white/5'}`}>
                                         <div className="flex items-start justify-between">
                                             <div className="space-y-1">
                                                 <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Reported Location</p>
                                                 <h4 className="text-white font-mono text-lg truncate max-w-[300px]">
-                                                    {verificationStep >= 1 ? mockVerification.reportedLocation : 'INITIALIZING...'}
+                                                    {verificationStep >= 1 ? currentVerification.reportedLocation : 'INITIALIZING...'}
                                                 </h4>
                                                 <p className="text-[10px] text-cyber-dark-accent font-mono tracking-tighter">
-                                                    {verificationStep >= 1 ? mockVerification.reportedCoords : '...'}
+                                                    {verificationStep >= 1 ? currentVerification.reportedCoords : '...'}
                                                 </p>
                                                 <p className="text-[9px] text-cyber-dark-accent/60 font-bold uppercase italic mt-1">
                                                     {verificationStep >= 1 ? '(Coordinates manually selected by user)' : 'FETCHING DB RECORD'}
@@ -270,46 +426,46 @@ const PhotoVerificationPage = ({ report, onNavigate }) => {
                                     </div>
 
                                     {/* Photo Location (EXIF) */}
-                                    <div className={`p-5 rounded-2xl border transition-all duration-500 ${verificationStep >= 2 ? 'bg-white/5 border-white/10' : 'opacity-20 border-white/5'}`}>
+                                    <div className={`p-4 rounded-2xl border transition-all duration-500 ${verificationStep >= 2 ? 'bg-white/5 border-white/10' : 'opacity-20 border-white/5'}`}>
                                         <div className="flex items-start justify-between">
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2">
                                                     <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Forensic Location Source</p>
                                                     {verificationStep >= 2 && (
-                                                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase border ${mockVerification.dataLabel === 'DEVICE_SIGNATURE'
-                                                                ? 'bg-cyber-dark-accent/20 text-cyber-dark-accent border-cyber-dark-accent/30'
-                                                                : mockVerification.isDataSimulated
-                                                                    ? 'bg-cyber-dark-amber/20 text-cyber-dark-amber border-cyber-dark-amber/30'
-                                                                    : 'bg-cyber-dark-green/20 text-cyber-dark-green border-cyber-dark-green/30'
+                                                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase border ${currentVerification.dataLabel === 'DEVICE_SIGNATURE'
+                                                            ? 'bg-cyber-dark-accent/20 text-cyber-dark-accent border-cyber-dark-accent/30'
+                                                            : currentVerification.isDataSimulated
+                                                                ? 'bg-cyber-dark-amber/20 text-cyber-dark-amber border-cyber-dark-amber/30'
+                                                                : 'bg-cyber-dark-green/20 text-cyber-dark-green border-cyber-dark-green/30'
                                                             }`}>
-                                                            {mockVerification.dataLabel === 'DEVICE_SIGNATURE'
+                                                            {currentVerification.dataLabel === 'DEVICE_SIGNATURE'
                                                                 ? 'Hardware Signature'
-                                                                : mockVerification.isDataSimulated
+                                                                : currentVerification.isDataSimulated
                                                                     ? 'Simulated Data'
                                                                     : 'Verified Metadata'}
                                                         </span>
                                                     )}
                                                 </div>
                                                 <h4 className="text-white font-mono text-lg truncate max-w-[300px]">
-                                                    {verificationStep >= 2 ? mockVerification.evidenceLocation : 'EXTRACTING...'}
+                                                    {verificationStep >= 2 ? currentVerification.evidenceLocation : 'EXTRACTING...'}
                                                 </h4>
                                                 <p className="text-[10px] text-white/60 font-mono tracking-tighter">
-                                                    {verificationStep >= 2 ? mockVerification.evidenceCoords : '...'}
+                                                    {verificationStep >= 2 ? currentVerification.evidenceCoords : '...'}
                                                 </p>
-                                                {verificationStep >= 2 && mockVerification.distance && (
-                                                    <div className={`mt-2 flex items-center gap-2 px-3 py-1.5 rounded-lg border ${mockVerification.isMatch ? 'bg-cyber-dark-green/5 border-cyber-dark-green/20' : 'bg-cyber-dark-red/5 border-cyber-dark-red/20'}`}>
-                                                        <AlertCircle className={`w-3 h-3 ${mockVerification.isMatch ? 'text-cyber-dark-green' : 'text-cyber-dark-red'}`} />
-                                                        <span className={`text-[10px] font-black uppercase ${mockVerification.isMatch ? 'text-cyber-dark-green' : 'text-cyber-dark-red'}`}>
-                                                            {mockVerification.isMatch ? 'Proximity Verified' : 'Location Mismatch'}: {mockVerification.distance}km
+                                                {verificationStep >= 2 && currentVerification.distance && (
+                                                    <div className={`mt-2 flex items-center gap-2 px-3 py-1.5 rounded-lg border ${currentVerification.isMatch ? 'bg-cyber-dark-green/5 border-cyber-dark-green/20' : 'bg-cyber-dark-red/5 border-cyber-dark-red/20'}`}>
+                                                        <AlertCircle className={`w-3 h-3 ${currentVerification.isMatch ? 'text-cyber-dark-green' : 'text-cyber-dark-red'}`} />
+                                                        <span className={`text-[10px] font-black uppercase ${currentVerification.isMatch ? 'text-cyber-dark-green' : 'text-cyber-dark-red'}`}>
+                                                            {currentVerification.isMatch ? 'Proximity Verified' : 'Location Mismatch'}: {currentVerification.distance}km
                                                         </span>
                                                     </div>
                                                 )}
                                                 <p className="text-[9px] text-white/30 font-bold uppercase italic mt-1">
-                                                    {verificationStep >= 2 ? (mockVerification.isLive ? '(Hardware-stamped live GPS)' : `(Metadata Analysis: Source ${mockVerification.dataLabel})`) : 'ANALYZING FILE HEADERS'}
+                                                    {verificationStep >= 2 ? (currentVerification.isLive ? '(Hardware-stamped live GPS)' : `(Metadata Analysis: Source ${currentVerification.dataLabel})`) : 'ANALYZING FILE HEADERS'}
                                                 </p>
                                             </div>
-                                            <div className={`p-2 rounded-lg ${verificationStep >= 2 ? (mockVerification.isMatch ? 'bg-cyber-dark-green/20 text-cyber-dark-green' : 'bg-cyber-dark-red/20 text-cyber-dark-red') : 'bg-white/5 text-white/10'}`}>
-                                                {mockVerification.isMatch ? <ShieldCheck className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
+                                            <div className={`p-2 rounded-lg ${verificationStep >= 2 ? (currentVerification.isMatch ? 'bg-cyber-dark-green/20 text-cyber-dark-green' : 'bg-cyber-dark-red/20 text-cyber-dark-red') : 'bg-white/5 text-white/10'}`}>
+                                                {currentVerification.isMatch ? <ShieldCheck className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
                                             </div>
                                         </div>
                                     </div>
@@ -317,37 +473,37 @@ const PhotoVerificationPage = ({ report, onNavigate }) => {
                             </div>
 
                             {/* Verification Result */}
-                            {results && (
+                            {localResults && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className={`p-6 rounded-3xl border text-center space-y-3 shadow-2xl relative overflow-hidden ${results.isMatch ? 'bg-[#06D6A0]/10 border-[#06D6A0]/30' : 'bg-[#EF233C]/10 border-[#EF233C]/30'}`}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className={`p-4 rounded-3xl border text-center space-y-2 shadow-2xl relative overflow-hidden ${localResults.isMatch ? 'bg-[#06D6A0]/10 border-[#06D6A0]/30' : 'bg-[#EF233C]/10 border-[#EF233C]/30'}`}
                                 >
-                                    {!results.isMatch && (
+                                    {!localResults.isMatch && (
                                         <div className="absolute top-0 left-0 w-full h-1 bg-red-500 animate-pulse" />
                                     )}
-                                    <div className="flex flex-col items-center gap-2">
-                                        {results.isMatch ? (
-                                            <CheckCircle2 className="w-10 h-10 text-cyber-dark-green" />
+                                    <div className="flex flex-col items-center gap-1">
+                                        {localResults.isMatch ? (
+                                            <CheckCircle2 className="w-8 h-8 text-cyber-dark-green" />
                                         ) : (
-                                            <ShieldAlert className="w-10 h-10 text-cyber-dark-red" />
+                                            <ShieldAlert className="w-8 h-8 text-cyber-dark-red" />
                                         )}
-                                        <h2 className={`text-3xl font-black tracking-tighter uppercase italic ${results.isMatch ? 'text-cyber-dark-green' : 'text-cyber-dark-red'}`}>
-                                            RESULT: {results.isMatch ? 'MATCH' : 'INTEGRITY BREACH'}
+                                        <h2 className={`text-2xl font-black tracking-tighter uppercase italic ${localResults.isMatch ? 'text-cyber-dark-green' : 'text-cyber-dark-red'}`}>
+                                            RESULT: {localResults.isMatch ? 'MATCH' : 'MISMATCH'}
                                         </h2>
                                     </div>
-                                    <div className="space-y-2">
-                                        <p className="text-white/80 text-xs font-bold uppercase tracking-widest">
-                                            {results.isMatch
-                                                ? 'This is a high-accuracy report. Metadata aligns with physical sensors.'
-                                                : results.isLive
-                                                    ? 'Live stream coordinates show minor deviation from reported zone.'
-                                                    : 'CRITICAL: Gallery photo EXIF location differs significantly from the reported incident location.'
+                                    <div className="space-y-1">
+                                        <p className="text-white/80 text-[10px] font-bold uppercase tracking-widest leading-tight">
+                                            {localResults.isMatch
+                                                ? 'High-accuracy forensic match. Metadata alignment verified.'
+                                                : localResults.isLive
+                                                    ? 'Live stream coordinates show minor deviation.'
+                                                    : 'CRITICAL: Metadata mismatch detected.'
                                             }
                                         </p>
-                                        {!results.isMatch && !results.isLive && (
-                                            <p className="text-red-400/60 text-[10px] uppercase font-black px-4 py-2 bg-red-500/10 rounded-lg inline-block border border-red-500/20">
-                                                Protocol Violation: Potential Evidence Fabrication
+                                        {!localResults.isMatch && !localResults.isLive && (
+                                            <p className="text-red-400 font-black text-[9px] uppercase tracking-tighter">
+                                                POTENTIAL EVIDENCE FABRICATION
                                             </p>
                                         )}
                                     </div>

@@ -9,13 +9,14 @@ function App() {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [viewedReport, setViewedReport] = useState(null);
     const [verifyingReport, setVerifyingReport] = useState(null);
+    const [verifyingResults, setVerifyingResults] = useState(null);
 
     const handleViewReport = (report) => {
         setViewedReport(report);
-        setVerifyingReport(null);
     };
 
     const handleVerifyReport = (report) => {
+        setVerifyingResults(null); // Reset results for a fresh scan
         setVerifyingReport(report);
         setViewedReport(null);
         setActiveTab('photo-verification');
@@ -24,6 +25,14 @@ function App() {
     const handleBackToDashboard = () => {
         setViewedReport(null);
     };
+
+    // Automatically clear verification state when navigating away
+    React.useEffect(() => {
+        if (activeTab !== 'photo-verification') {
+            setVerifyingReport(null);
+            setVerifyingResults(null);
+        }
+    }, [activeTab]);
 
     React.useEffect(() => {
         const handleTabChange = (e) => {
@@ -53,7 +62,19 @@ function App() {
                     <>
                         {activeTab === 'dashboard' && <Dashboard onViewReport={handleViewReport} />}
                         {activeTab === 'citizen-reports' && <CitizenReports onViewReport={handleViewReport} />}
-                        {activeTab === 'photo-verification' && <PhotoVerificationPage report={verifyingReport} onNavigate={setActiveTab} />}
+                        {activeTab === 'photo-verification' && (
+                            <PhotoVerificationPage
+                                report={verifyingReport}
+                                results={verifyingResults}
+                                onScanComplete={setVerifyingResults}
+                                onNavigate={setActiveTab}
+                                onSelectReport={(r) => {
+                                    setVerifyingResults(null);
+                                    setVerifyingReport(r);
+                                }}
+                                onViewReport={handleViewReport}
+                            />
+                        )}
                         {activeTab !== 'dashboard' && activeTab !== 'citizen-reports' && activeTab !== 'photo-verification' && (
                             <div className="flex-1 flex items-center justify-center h-full">
                                 <div className="text-center p-12 glass-card border-none bg-white/[0.02]">
