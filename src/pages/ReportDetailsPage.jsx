@@ -34,8 +34,12 @@ const getDistanceKm = (lat1, lng1, lat2, lng2) => {
 };
 
 const parseReportCoords = (r) => {
-    let lat = r.lat ? parseFloat(r.lat) : null;
-    let lng = r.lng ? parseFloat(r.lng) : null;
+    let lat = r.incidentLat || r.latitude || r.lat || null;
+    let lng = r.incidentLon || r.longitude || r.lng || null;
+
+    lat = lat ? parseFloat(lat) : null;
+    lng = lng ? parseFloat(lng) : null;
+
     if (!lat || !lng) {
         const m = (r.location || '').match(/\(?\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*\)?/);
         if (m) { lat = parseFloat(m[1]); lng = parseFloat(m[2]); }
@@ -117,7 +121,7 @@ const REJECTION_REASONS = [
     "Others"
 ];
 
-const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
+const ReportDetailsPage = ({ report, onBack, onVerifyPhoto, onRefresh }) => {
     const [isUpdating, setIsUpdating] = useState(false);
     const [showRejectReasons, setShowRejectReasons] = useState(false);
     const [selectedReasons, setSelectedReasons] = useState([]);
@@ -129,8 +133,12 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
 
-    let mapLat = report?.lat ? parseFloat(report.lat) : null;
-    let mapLng = report?.lng ? parseFloat(report.lng) : null;
+    let mapLat = report?.incidentLat || report?.latitude || report?.lat || null;
+    let mapLng = report?.incidentLon || report?.longitude || report?.lng || null;
+
+    if (mapLat !== null) mapLat = parseFloat(mapLat);
+    if (mapLng !== null) mapLng = parseFloat(mapLng);
+
     if (!mapLat || !mapLng) {
         const coordMatch = (report?.location || '').match(/\(?\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*\)?/);
         if (coordMatch) {
@@ -489,7 +497,12 @@ const ReportDetailsPage = ({ report, onBack, onRefresh }) => {
                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                             onError={(e) => { e.target.src = 'https://via.placeholder.com/800?text=Image+Load+Failed'; }}
                                         />
-                                        <div className="absolute top-4 left-4 px-2 py-1 bg-black/60 backdrop-blur-md rounded text-[10px] font-bold text-white/70">STILL_FRAME</div>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onVerifyPhoto(report); }}
+                                            className="absolute top-4 left-4 px-3 py-1.5 bg-cyber-dark-accent hover:bg-cyber-dark-accent/90 backdrop-blur-md rounded-lg text-[10px] font-bold text-white shadow-lg transition-all z-10"
+                                        >
+                                            SEND FOR VERIFICATION
+                                        </button>
                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                             <Maximize2 className="w-8 h-8 text-white/50" />
                                         </div>

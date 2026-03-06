@@ -3,14 +3,22 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import ReportDetailsPage from './pages/ReportDetailsPage';
 import CitizenReports from './pages/CitizenReports';
-import TrustAnalyticsPage from './pages/TrustAnalyticsPage';
+import PhotoVerificationPage from './pages/PhotoVerificationPage';
 
 function App() {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [viewedReport, setViewedReport] = useState(null);
+    const [verifyingReport, setVerifyingReport] = useState(null);
 
     const handleViewReport = (report) => {
         setViewedReport(report);
+        setVerifyingReport(null);
+    };
+
+    const handleVerifyReport = (report) => {
+        setVerifyingReport(report);
+        setViewedReport(null);
+        setActiveTab('photo-verification');
     };
 
     const handleBackToDashboard = () => {
@@ -35,6 +43,7 @@ function App() {
                     <ReportDetailsPage
                         report={viewedReport}
                         onBack={handleBackToDashboard}
+                        onVerifyPhoto={handleVerifyReport}
                         onRefresh={() => {
                             // This will be handled by the Dashboard's own reload logic
                             // but we can pass a global state if needed.
@@ -44,8 +53,8 @@ function App() {
                     <>
                         {activeTab === 'dashboard' && <Dashboard onViewReport={handleViewReport} />}
                         {activeTab === 'citizen-reports' && <CitizenReports onViewReport={handleViewReport} />}
-                        {activeTab === 'trust-analytics' && <TrustAnalyticsPage />}
-                        {activeTab !== 'dashboard' && activeTab !== 'citizen-reports' && activeTab !== 'trust-analytics' && (
+                        {activeTab === 'photo-verification' && <PhotoVerificationPage report={verifyingReport} onNavigate={setActiveTab} />}
+                        {activeTab !== 'dashboard' && activeTab !== 'citizen-reports' && activeTab !== 'photo-verification' && (
                             <div className="flex-1 flex items-center justify-center h-full">
                                 <div className="text-center p-12 glass-card border-none bg-white/[0.02]">
                                     <h2 className="text-4xl font-black mb-4 tracking-tighter opacity-20 uppercase italic">

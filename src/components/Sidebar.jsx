@@ -6,14 +6,15 @@ import {
     Settings,
     LogOut,
     ShieldCheck,
-    FileText
+    FileText,
+    Image as ImageIcon
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
     { icon: FileText, label: 'Citizen Reports', id: 'citizen-reports' },
-    { icon: Users, label: 'User Trust Analytics', id: 'trust-analytics' },
+    { icon: ImageIcon, label: 'Photo Verification', id: 'photo-verification' },
     { icon: Settings, label: 'Settings', id: 'settings' },
 ];
 
