@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LucideShieldCheck, LucideShieldAlert, LucideMail, LucideLock, LucideArrowRight, LucideLoader2, LucideEye, LucideEyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import CyberGrid from '../components/CyberGrid';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -39,15 +40,12 @@ const Login = () => {
 
     return (
         <div className="min-h-screen bg-cyber-dark flex items-center justify-center p-6 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyber-dark-accent rounded-full blur-[120px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyber-dark-accent/30 rounded-full blur-[120px]" />
-            </div>
+            <CyberGrid />
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-lg"
+                className="w-full max-w-lg relative z-10"
             >
                 <div className="mb-10 text-center">
                     <motion.div 
@@ -63,8 +61,13 @@ const Login = () => {
                         }}
                         className="inline-flex items-center justify-center p-5 bg-cyber-dark-accent/10 border border-cyber-dark-accent/20 rounded-2xl mb-6 relative group"
                     >
-                        {/* Glow effect */}
-                        <div className="absolute inset-0 bg-cyber-dark-accent/30 blur-2xl rounded-full" />
+                        {/* Glow effect - Synchronized with border fade */}
+                        <motion.div 
+                            initial={{ opacity: 1 }}
+                            animate={{ opacity: 0 }}
+                            transition={{ duration: 1.5, delay: 1, ease: "easeOut" }}
+                            className="absolute inset-0 bg-cyber-dark-accent/40 blur-2xl rounded-full" 
+                        />
                         
                         <LucideShieldCheck className="w-12 h-12 text-cyber-dark-accent relative z-10" />
                     </motion.div>
@@ -171,7 +174,7 @@ const Login = () => {
                 </div>
             </motion.div>
 
-                <div className="mt-8 text-center text-[10px] text-white/40 font-bold uppercase tracking-[0.2em]">
+                <div className="mt-8 text-center text-[10px] text-white/40 font-bold uppercase tracking-[0.2em] relative z-10">
                     System Build v2.4.0 • Secured by ADAR<br/>&copy;2026 ADAR
                 </div>
             </motion.div>
