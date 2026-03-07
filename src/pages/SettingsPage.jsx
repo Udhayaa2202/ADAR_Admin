@@ -65,12 +65,9 @@ const SettingsPage = () => {
             <StarBackground />
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-2 shrink-0 relative z-10">
                 <div>
-                    <h2 className="text-3xl font-black bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent italic tracking-tight">
-                        MISSION CONFIGURATION
+                    <h2 className="text-3xl font-black bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent italic tracking-tight pr-4">
+                        ADMINISTRATIVE CONSOLE
                     </h2>
-                    <p className="text-sm text-white/40 mt-1 font-bold italic uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded inline-block">
-                        Proprietary Intelligence Parameters
-                    </p>
                 </div>
             </header>
 
@@ -113,8 +110,18 @@ const SettingsPage = () => {
                             <div className="relative z-10 px-8 pb-8 -mt-16">
                                 <div className="flex flex-col md:flex-row md:items-end gap-6 mb-8 text-left">
                                     <div className="relative group">
-                                        <div className="w-32 h-32 rounded-3xl bg-cyber-dark-bg border-4 border-white/10 flex items-center justify-center overflow-hidden shadow-2xl transition-transform group-hover:scale-[1.02]">
-                                            <User className="w-16 h-16 text-cyber-dark-accent" />
+                                        <div className="w-32 h-32 relative flex items-center justify-center">
+                                            
+                                            <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-cyber-dark-accent/20 to-transparent animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                                        
+                                            <div className="absolute inset-0 rounded-3xl border-2 border-white/5 bg-cyber-dark-bg/40 backdrop-blur-md shadow-[0_0_20px_rgba(58,134,255,0.05)]" />
+                                            
+                                            <div className="relative w-[85%] h-[85%] rounded-2xl bg-gradient-to-br from-white/5 to-transparent border border-white/10 flex items-center justify-center overflow-hidden shadow-inner group-hover:border-cyber-dark-accent/30 transition-colors duration-500">
+                                                <div className="absolute inset-0 bg-cyber-dark-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                                <User className="w-14 h-14 text-cyber-dark-accent drop-shadow-[0_0_8px_rgba(58,134,255,0.5)] transition-transform duration-500 group-hover:scale-110" />
+                                            </div>
+                                            
+                                            <div className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-cyber-dark-green border-2 border-cyber-dark-bg shadow-[0_0_10px_rgba(16,185,129,0.5)] z-20" />
                                         </div>
                                     </div>
 
@@ -204,8 +211,8 @@ const SettingsPage = () => {
                             <div className="flex items-center gap-4 border-b border-white/5 pb-4">
                                 <Activity className="w-8 h-8 text-cyber-dark-green" />
                                 <div>
-                                    <h3 className="text-xl font-bold uppercase tracking-tight">System Vitality</h3>
-                                    <p className="text-sm text-white/30 font-medium">Real-time infrastructure health monitoring.</p>
+                                    <h3 className="text-xl font-bold uppercase tracking-tight">System Health</h3>
+                                    <p className="text-sm font-medium text-white/30 italic tracking-wide">Real-time infrastructure health monitoring.</p>
                                 </div>
                             </div>
 
