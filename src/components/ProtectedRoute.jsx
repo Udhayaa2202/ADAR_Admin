@@ -1,12 +1,22 @@
 import React from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Login from '../pages/Login';
 
 const ProtectedRoute = ({ children }) => {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-cyber-dark flex items-center justify-center">
+                <div className="text-cyber-dark-accent animate-pulse font-black tracking-tighter uppercase italic">
+                    Initializing Secure Link...
+                </div>
+            </div>
+        );
+    }
 
     if (!user) {
-        return <Login />;
+        return <Navigate to="/login" replace />;
     }
 
     return children;

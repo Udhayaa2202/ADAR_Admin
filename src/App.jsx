@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import ReportDetailsPage from './pages/ReportDetailsPage';
 import CitizenReports from './pages/CitizenReports';
 import PhotoVerificationPage from './pages/PhotoVerificationPage';
 import SettingsPage from './pages/SettingsPage';
+import Login from './pages/Login';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -19,7 +21,7 @@ function AppContent() {
     };
 
     const handleVerifyReport = (report) => {
-        setVerifyingResults(null); // Reset results for a fresh scan
+        setVerifyingResults(null); 
         setVerifyingReport(report);
         setViewedReport(null);
         setActiveTab('photo-verification');
@@ -29,7 +31,6 @@ function AppContent() {
         setViewedReport(null);
     };
 
-    // Automatically clear verification state when navigating away
     React.useEffect(() => {
         if (activeTab !== 'photo-verification') {
             setVerifyingReport(null);
@@ -56,10 +57,7 @@ function AppContent() {
                         report={viewedReport}
                         onBack={handleBackToDashboard}
                         onVerifyPhoto={handleVerifyReport}
-                        onRefresh={() => {
-                            // This will be handled by the Dashboard's own reload logic
-                            // but we can pass a global state if needed.
-                        }}
+                        onRefresh={() => {}}
                     />
                 ) : (
                     <>
@@ -101,9 +99,19 @@ function AppContent() {
 function App() {
     return (
         <AuthProvider>
-            <ProtectedRoute>
-                <AppContent />
-            </ProtectedRoute>
+            <Router>
+                <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route 
+                        path="/*" 
+                        element={
+                            <ProtectedRoute>
+                                <AppContent />
+                            </ProtectedRoute>
+                        } 
+                    />
+                </Routes>
+            </Router>
         </AuthProvider>
     );
 }
