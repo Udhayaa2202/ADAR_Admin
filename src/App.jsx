@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import ReportDetailsPage from './pages/ReportDetailsPage';
 import CitizenReports from './pages/CitizenReports';
 import PhotoVerificationPage from './pages/PhotoVerificationPage';
+import SettingsPage from './pages/SettingsPage';
 
 function App() {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -75,7 +76,8 @@ function App() {
                                 onViewReport={handleViewReport}
                             />
                         )}
-                        {activeTab !== 'dashboard' && activeTab !== 'citizen-reports' && activeTab !== 'photo-verification' && (
+                        {activeTab === 'settings' && <SettingsPage />}
+                        {activeTab !== 'dashboard' && activeTab !== 'citizen-reports' && activeTab !== 'photo-verification' && activeTab !== 'settings' && (
                             <div className="flex-1 flex items-center justify-center h-full">
                                 <div className="text-center p-12 glass-card border-none bg-white/[0.02]">
                                     <h2 className="text-4xl font-black mb-4 tracking-tighter opacity-20 uppercase italic">
