@@ -19,6 +19,7 @@ import { db } from '../services/firebase';
 import { supabase } from '../services/supabase';
 import { collection, query, limit, getDocs } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
+import StarBackground from '../components/StarBackground';
 
 const SettingsPage = () => {
     const { user } = useAuth();
@@ -60,8 +61,9 @@ const SettingsPage = () => {
     ];
 
     return (
-        <div className="h-full flex flex-col p-4 gap-4 font-sans overflow-y-auto custom-scrollbar">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-2 shrink-0">
+        <div className="h-full flex flex-col p-4 gap-4 font-sans overflow-hidden relative">
+            <StarBackground />
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-2 shrink-0 relative z-10">
                 <div>
                     <h2 className="text-3xl font-black bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent italic tracking-tight">
                         MISSION CONFIGURATION
@@ -72,7 +74,7 @@ const SettingsPage = () => {
                 </div>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-1 min-h-0">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-1 min-h-0 relative z-10 overflow-hidden">
                 {/* Navigation Sidebar */}
                 <div className="lg:col-span-1 glass-card p-3 space-y-2 h-fit">
                     {sections.map((section) => (
@@ -91,7 +93,7 @@ const SettingsPage = () => {
                 </div>
 
                 {/* Content Area */}
-                <div className="lg:col-span-3 space-y-4">
+                <div className="lg:col-span-3 space-y-4 overflow-y-auto custom-scrollbar pr-2 pb-4">
                     {activeSection === 'profile' && (
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
