@@ -130,11 +130,32 @@ const Dashboard = ({ onViewReport }) => {
 
     const categoryData = processCategoryData();
 
-    const getStatsForRange = (rangeReports) => {
+    const getStatsForRange = (rangeReports, allReports) => {
+        // A user is a "New Install" if their earliest report in the entire dataset 
+        // falls within the current rangeReports set.
+        const usersInRange = [...new Set(rangeReports.map(r => r.userId))];
+        
+        const newInstalls = usersInRange.filter(userId => {
+            const userReports = allReports.filter(r => r.userId === userId);
+            if (userReports.length === 0) return false;
+            
+            const earliestReport = userReports.reduce((prev, curr) => {
+                const prevDate = prev.createdAt?.toDate ? prev.createdAt.toDate() : new Date(prev.incidentDate || 0);
+                const currDate = curr.createdAt?.toDate ? curr.createdAt.toDate() : new Date(curr.incidentDate || 0);
+                return prevDate < currDate ? prev : curr;
+            });
+            
+            const earliestDate = earliestReport.createdAt?.toDate ? earliestReport.createdAt.toDate() : new Date(earliestReport.incidentDate || 0);
+            return rangeReports.some(r => {
+                const rDate = r.createdAt?.toDate ? r.createdAt.toDate() : new Date(r.incidentDate || 0);
+                return rDate.getTime() === earliestDate.getTime();
+            });
+        }).length;
+
         return {
             total: rangeReports.length,
-            alerts: rangeReports.filter(r => r.status === 'Flagged').length,
-            users: [...new Set(rangeReports.map(r => r.userId))].length
+            flagged: rangeReports.filter(r => r.status === 'Flagged').length,
+            newInstalls: newInstalls
         };
     };
 
@@ -160,11 +181,11 @@ const Dashboard = ({ onViewReport }) => {
             return date >= prevStart && date <= prevEnd;
         });
 
-        const current = getStatsForRange(currentReports);
-        const prev = getStatsForRange(prevReports);
+        const current = getStatsForRange(currentReports, reports);
+        const prev = getStatsForRange(prevReports, reports);
 
         const calcTrend = (curr, old) => {
-            if (old === 0) return curr > 0 ? 100 : 0;
+            if (old === 0) return null;
             return Math.round(((curr - old) / old) * 100);
         };
 
@@ -172,8 +193,8 @@ const Dashboard = ({ onViewReport }) => {
             current,
             trends: {
                 total: calcTrend(current.total, prev.total),
-                alerts: calcTrend(current.alerts, prev.alerts),
-                users: calcTrend(current.users, prev.users)
+                flagged: calcTrend(current.flagged, prev.flagged),
+                newInstalls: calcTrend(current.newInstalls, prev.newInstalls)
             },
             periodLabel: viewType === 'daily' ? 'Today' : 'This Month'
         };
@@ -203,16 +224,32 @@ const Dashboard = ({ onViewReport }) => {
         { label: 'Rejected', value: getAvgByStatus('Rejected'), color: 'red' },
     ];
 
+    const getHoverTrend = (currValue, dataKey) => {
+        if (!hoveredPoint || !chartData.length) return null;
+        const index = chartData.findIndex(d => d.name === hoveredPoint.name);
+        if (index <= 0) return null;
+        const prevPoint = chartData[index - 1];
+        const prevValue = prevPoint[dataKey];
+        if (prevValue === 0) return null;
+        return Math.round(((currValue - prevValue) / prevValue) * 100);
+    };
+
     const displayStats = hoveredPoint ? {
         total: hoveredPoint.total,
-        alerts: hoveredPoint.Flagged,
-        users: hoveredPoint.userCount,
+        flagged: hoveredPoint.Flagged,
+        newInstalls: hoveredPoint.userCount, // Note: On chart hover, we still show active reporters for that point
+        trends: {
+            total: getHoverTrend(hoveredPoint.total, 'total'),
+            flagged: getHoverTrend(hoveredPoint.Flagged, 'Flagged'),
+            newInstalls: getHoverTrend(hoveredPoint.userCount, 'userCount')
+        },
         labelTitle: hoveredPoint.name,
         isHover: true
     } : {
         total: dynamics.current.total,
-        alerts: dynamics.current.alerts,
-        users: dynamics.current.users,
+        flagged: dynamics.current.flagged,
+        newInstalls: dynamics.current.newInstalls,
+        trends: dynamics.trends,
         labelTitle: dynamics.periodLabel,
         isHover: false
     };
@@ -236,25 +273,25 @@ const Dashboard = ({ onViewReport }) => {
                         label={`Reports (${displayStats.labelTitle})`}
                         value={displayStats.total.toLocaleString()}
                         color="blue"
-                        trend={!displayStats.isHover ? dynamics.trends.total : null}
+                        trend={displayStats.trends.total}
                     />
                 </div>
                 <div className="lg:col-span-1">
                     <StatCard
                         icon={AlertCircle}
-                        label={`Alerts (${displayStats.labelTitle})`}
-                        value={displayStats.alerts.toString()}
+                        label={`Flagged (${displayStats.labelTitle})`}
+                        value={displayStats.flagged.toString()}
                         color="red"
-                        trend={!displayStats.isHover ? dynamics.trends.alerts : null}
+                        trend={displayStats.trends.flagged}
                     />
                 </div>
                 <div className="lg:col-span-1">
                     <StatCard
                         icon={Users}
-                        label={`Reporters (${displayStats.labelTitle})`}
-                        value={displayStats.users.toString()}
+                        label={`New Installs (${displayStats.labelTitle})`}
+                        value={displayStats.newInstalls.toString()}
                         color="green"
-                        trend={!displayStats.isHover ? dynamics.trends.users : null}
+                        trend={displayStats.trends.newInstalls}
                     />
                 </div>
 
@@ -270,7 +307,7 @@ const Dashboard = ({ onViewReport }) => {
                             <TrendingUp className="w-6 h-6" />
                         </div>
                         <div className="flex flex-col items-end overflow-hidden">
-                            <span className="text-[11px] font-normal uppercase tracking-[0.2em] text-white/40 truncate w-full text-right">Integrity Matrix</span>
+                            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 truncate w-full text-right">Integrity Matrix</span>
                             <span className="text-[8px] font-normal text-cyber-dark-amber/80 uppercase tracking-widest truncate w-full text-right">{displayStats.labelTitle} Focus</span>
                         </div>
                     </div>
@@ -278,8 +315,8 @@ const Dashboard = ({ onViewReport }) => {
                         {trustStats.map(stat => (
                             <div key={stat.label} className="flex flex-col gap-1 overflow-hidden">
                                 <div className="flex items-center justify-between gap-2">
-                                    <span className="text-[10px] font-normal text-white/60 uppercase tracking-tighter truncate">{stat.label}</span>
-                                    <span className="text-[13px] font-normal whitespace-nowrap">{stat.value}<span className="text-[9px] opacity-40 ml-0.5">%</span></span>
+                                    <span className="text-[10px] font-bold text-white/85 uppercase tracking-tighter truncate">{stat.label}</span>
+                                    <span className="text-[13px] font-bold whitespace-nowrap">{stat.value}<span className="text-[9px] opacity-70 ml-0.5">%</span></span>
                                 </div>
                                 <div className="h-1 w-full rounded-full bg-white/5 overflow-hidden">
                                     <div
@@ -297,8 +334,8 @@ const Dashboard = ({ onViewReport }) => {
             </div>
 
             {/* Analytics Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
-                <div className="lg:col-span-2 glass-card p-5 flex flex-col gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[320px] shrink-0">
+                <div className="lg:col-span-2 glass-card p-4 flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Activity className="w-4 h-4 text-cyber-dark-accent" />
@@ -314,7 +351,7 @@ const Dashboard = ({ onViewReport }) => {
                                 ].map(k => (
                                     <div key={k.label} className="flex items-center gap-1.5">
                                         <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: k.color }} />
-                                        <span className="text-[9px] text-white/40 uppercase font-black tracking-widest">{k.label}</span>
+                                        <span className="text-[9px] text-white/70 uppercase font-black tracking-widest">{k.label}</span>
                                     </div>
                                 ))}
                             </div>
@@ -322,13 +359,13 @@ const Dashboard = ({ onViewReport }) => {
                             <div className="flex bg-white/5 p-1 rounded-xl border border-white/5 shadow-inner">
                                 <button
                                     onClick={() => setViewType('daily')}
-                                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${viewType === 'daily' ? 'bg-cyber-dark-accent text-white shadow-[0_0_15px_rgba(58,134,255,0.4)]' : 'text-white/20 hover:text-white/50'}`}
+                                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${viewType === 'daily' ? 'bg-cyber-dark-accent text-white shadow-[0_0_15px_rgba(58,134,255,0.4)]' : 'text-white/70 hover:text-white/90'}`}
                                 >
                                     Daily
                                 </button>
                                 <button
                                     onClick={() => setViewType('monthly')}
-                                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${viewType === 'monthly' ? 'bg-cyber-dark-accent text-white shadow-[0_0_15px_rgba(58,134,255,0.4)]' : 'text-white/20 hover:text-white/50'}`}
+                                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${viewType === 'monthly' ? 'bg-cyber-dark-accent text-white shadow-[0_0_15px_rgba(58,134,255,0.4)]' : 'text-white/70 hover:text-white/90'}`}
                                 >
                                     Monthly
                                 </button>
@@ -336,7 +373,12 @@ const Dashboard = ({ onViewReport }) => {
                         </div>
                     </div>
 
-                    <div className="flex-1 w-full min-h-0">
+                    <motion.div 
+                        className="flex-1 w-full min-h-0"
+                        initial={{ clipPath: 'inset(0 100% 0 0)' }}
+                        animate={{ clipPath: 'inset(0 0% 0 0)' }}
+                        transition={{ duration: 1.5, ease: "easeInOut" }}
+                    >
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart
                                 data={chartData}
@@ -390,7 +432,7 @@ const Dashboard = ({ onViewReport }) => {
                                 <Area type="monotone" dataKey="Rejected" stroke="#EF233C" strokeWidth={3} fillOpacity={1} fill="url(#colorRejected)" stackId="1" />
                             </AreaChart>
                         </ResponsiveContainer>
-                    </div>
+                    </motion.div>
                 </div>
 
                 <div className="lg:col-span-1 h-full">

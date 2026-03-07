@@ -31,26 +31,26 @@ const TopReporters = ({ reports }) => {
                 avgTrust: (user.totalTrust / user.totalReports).toFixed(1)
             }))
             .sort((a, b) => b.avgTrust - a.avgTrust || b.totalReports - a.totalReports)
-            .slice(0, 5); // Top 5
+            .slice(0, 4); // Top 4
     };
 
     const data = processTopReporters();
 
     return (
-        <div className="glass-card p-5 flex flex-col gap-4 h-full">
-            <div className="flex items-center justify-between">
+        <div className="glass-card p-4 flex flex-col gap-3 h-full overflow-hidden">
+            <div className="flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-cyber-dark-accent" />
                     <h3 className="font-bold text-base">Top Reporters</h3>
                 </div>
                 <Award className="w-4 h-4 text-[#FFBE0B]" />
             </div>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-1">
                 {data.map((user, index) => (
                     <div key={user.userId} className="flex flex-col gap-1.5 p-3 rounded-xl bg-white/2 border border-white/5 hover:bg-white/5 transition-all">
                         <div className="flex items-end justify-between">
                             <div className="flex flex-col gap-1 overflow-hidden">
-                                <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.2em] leading-none">Reporter ID</span>
+                                <span className="text-[7px] font-black text-white/50 uppercase tracking-[0.2em] leading-none">Reporter ID</span>
                                 <div className="flex items-center gap-2 overflow-hidden">
                                     <span className={`text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 ${index === 0 ? 'bg-cyber-dark-amber text-[#0D1B2A]' : 'bg-white/10 text-white/40'}`}>
                                         #{index + 1}
@@ -59,8 +59,8 @@ const TopReporters = ({ reports }) => {
                                 </div>
                             </div>
                             <div className="flex flex-col items-end gap-1">
-                                <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.2em] leading-none">Reports Filed</span>
-                                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">{user.totalReports}</span>
+                                <span className="text-[7px] font-black text-white/50 uppercase tracking-[0.2em] leading-none">Reports Filed</span>
+                                <span className="text-[10px] font-black text-white/70 uppercase tracking-widest">{user.totalReports}</span>
                             </div>
                         </div>
                         <div className="flex items-center justify-between gap-4">
@@ -76,7 +76,7 @@ const TopReporters = ({ reports }) => {
                                 </span>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-tighter text-white/30">
+                        <div className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-tighter text-white/70">
                             <div className="flex items-center gap-1">
                                 <ShieldCheck className="w-2.5 h-2.5 text-cyber-dark-green" />
                                 <span>{user.approvedCount} Appr</span>
