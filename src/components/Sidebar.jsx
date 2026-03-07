@@ -10,6 +10,7 @@ import {
     Image as ImageIcon
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
@@ -19,6 +20,16 @@ const navItems = [
 ];
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
+    const { logout } = useAuth();
+
+    const handleSignOut = async () => {
+        try {
+            await logout();
+        } catch (error) {
+            console.error("Error signing out:", error);
+        }
+    };
+
     return (
         <aside className="w-72 h-screen glass-card rounded-none border-y-0 border-l-0 border-r-white/10 flex flex-col p-6 sticky top-0">
             <div className="flex items-center gap-3 mb-10 px-2">
@@ -54,7 +65,10 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
             </nav>
 
             <div className="mt-auto pt-6 border-t border-white/5">
-                <button className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-red-400 hover:bg-red-400/10 transition-colors group">
+                <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-red-400 hover:bg-red-400/10 transition-colors group"
+                >
                     <LogOut className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     <span className="font-medium">Sign Out</span>
                 </button>

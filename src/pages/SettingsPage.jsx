@@ -18,8 +18,10 @@ import {
 import { db } from '../services/firebase';
 import { supabase } from '../services/supabase';
 import { collection, query, limit, getDocs } from 'firebase/firestore';
+import { useAuth } from '../context/AuthContext';
 
 const SettingsPage = () => {
+    const { user } = useAuth();
     const [firebaseStatus, setFirebaseStatus] = useState('Checking...');
     const [supabaseStatus, setSupabaseStatus] = useState('Checking...');
     const [activeSection, setActiveSection] = useState('profile');
@@ -65,14 +67,14 @@ const SettingsPage = () => {
                         MISSION CONFIGURATION
                     </h2>
                     <p className="text-sm text-white/40 mt-1 font-bold italic uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded inline-block">
-                        Proprietary Intelligence Parameters // System Protocols
+                        Proprietary Intelligence Parameters
                     </p>
                 </div>
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-1 min-h-0">
                 {/* Navigation Sidebar */}
-                <div className="lg:col-span-1 glass-card p-3 space-y-2">
+                <div className="lg:col-span-1 glass-card p-3 space-y-2 h-fit">
                     {sections.map((section) => (
                         <button
                             key={section.id}
@@ -97,48 +99,42 @@ const SettingsPage = () => {
                             className="glass-card overflow-hidden"
                         >
                             {/* Profile Header Background Banner */}
-                            <div className="h-48 relative overflow-hidden">
+                            <div className="h-48 relative overflow-hidden group">
                                 <img
                                     src="/admin_profile_banner_cyber_dark_1772859940562.png"
                                     alt="Admin Profile Banner"
-                                    className="w-full h-full object-cover opacity-55 mix-blend-overlay"
+                                    className="w-full h-full object-cover opacity-55 mix-blend-overlay transition-transform duration-700 group-hover:scale-105"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-cyber-dark-bg to-transparent" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-cyber-dark-bg via-cyber-dark-bg/20 to-transparent" />
                             </div>
 
                             <div className="relative z-10 px-8 pb-8 -mt-16">
-                                <div className="flex flex-col md:flex-row md:items-end gap-6 mb-8">
+                                <div className="flex flex-col md:flex-row md:items-end gap-6 mb-8 text-left">
                                     <div className="relative group">
                                         <div className="w-32 h-32 rounded-3xl bg-cyber-dark-bg border-4 border-white/10 flex items-center justify-center overflow-hidden shadow-2xl transition-transform group-hover:scale-[1.02]">
                                             <User className="w-16 h-16 text-cyber-dark-accent" />
                                         </div>
                                     </div>
 
-                                    <div className="flex-1 space-y-2">
+                                    <div className="flex-1 space-y-2 pb-2">
                                         <div className="flex items-center gap-4 flex-wrap">
-                                            <h3 className="text-4xl font-black uppercase tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent italic">
-                                                Udhayaa
+                                            <h3 className="text-4xl font-black uppercase tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent italic pr-2">
+                                                {user?.email ? (() => {
+                                                    const namePart = user.email.split('@')[0];
+                                                    return namePart.charAt(0).toUpperCase() + namePart.slice(1).toLowerCase();
+                                                })() : 'Admin'}
                                             </h3>
-                                            <div className="px-3 py-1 rounded-full bg-cyber-dark-accent/20 border border-cyber-dark-accent/50 flex items-center gap-2 shadow-[0_0_15px_rgba(58,134,255,0.3)]">
-                                                <ShieldCheck className="w-3.5 h-3.5 text-cyber-dark-accent" />
-                                                <span className="text-[11px] font-black text-cyber-dark-accent uppercase tracking-[0.15em]">
+                                            <div className="px-2.5 py-0.5 rounded-full bg-cyber-dark-green/20 border border-cyber-dark-green/50 flex items-center gap-1.5 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                                                <ShieldCheck className="w-3 h-3 text-cyber-dark-green" />
+                                                <span className="text-[9px] font-black text-cyber-dark-green uppercase tracking-[0.1em]">
                                                     Verified Admin
                                                 </span>
                                             </div>
                                         </div>
                                         <p className="text-white/60 font-bold italic uppercase tracking-[0.2em] text-sm flex items-center gap-2">
                                             <span className="w-4 h-[1px] bg-cyber-dark-accent" />
-                                            Chief Intelligence Officer ADAR Lead
+                                            Chief Intelligence Officer <br />ADAR Lead
                                         </p>
-                                    </div>
-
-                                    <div className="flex gap-3">
-                                        <button className="px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-bold hover:bg-white/10 transition-all uppercase tracking-widest text-white/60">
-                                            Edit Profile
-                                        </button>
-                                        <button className="px-6 py-2.5 rounded-xl bg-cyber-dark-accent text-white text-sm font-black uppercase tracking-wider hover:shadow-[0_0_20px_rgba(58,134,255,0.4)] transition-all">
-                                            Save Changes
-                                        </button>
                                     </div>
                                 </div>
 
@@ -148,25 +144,37 @@ const SettingsPage = () => {
                                             <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Account Email</label>
                                             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5">
                                                 <Mail className="w-4 h-4 text-white/20" />
-                                                <span className="text-white/80 font-medium">admin.udhayaa@adar.intelligence</span>
+                                                <span className="text-white/80 font-medium">{user?.email || 'admin@adar.center'}</span>
                                             </div>
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Contact Terminal</label>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Contact </label>
                                             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5">
                                                 <Phone className="w-4 h-4 text-white/20" />
-                                                <span className="text-white/80 font-medium">+91 ••••• ••890</span>
+                                                <span className="text-white/80 font-medium">
+                                                    {user?.email ? (() => {
+                                                        const prefix = user.email.split('@')[0].toLowerCase();
+                                                        const phoneMap = {
+                                                            'udhayaa': '+91 86106 27549',
+                                                            'srimokesh': '+91 90809 76550',
+                                                            'srikumaran': '+91 70100 66485'
+                                                        };
+                                                        return phoneMap[prefix] || '+91 00000 00000';
+                                                    })() : '+91 86106 27549'}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="space-y-6">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Access Level</label>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Last Login</label>
                                             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5">
-                                                <ShieldCheck className="w-4 h-4 text-cyber-dark-green/40" />
-                                                <span className="text-white/80 font-medium italic uppercase tracking-wider">Level 5 [Root Authority]</span>
+                                                <Activity className="w-4 h-4 text-cyber-dark-accent/40" />
+                                                <span className="text-white/80 font-medium italic uppercase tracking-wider">
+                                                    {user?.metadata?.lastSignInTime ? new Date(user.metadata.lastSignInTime).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A'}
+                                                </span>
                                             </div>
                                         </div>
 
@@ -174,24 +182,13 @@ const SettingsPage = () => {
                                             <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Member Since</label>
                                             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5">
                                                 <Calendar className="w-4 h-4 text-white/20" />
-                                                <span className="text-white/80 font-medium uppercase tracking-wider">MARCH 2026 // ADAR Genesis</span>
+                                                <span className="text-white/80 font-medium uppercase tracking-wider">MARCH 2026</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="mt-8 p-6 rounded-2xl bg-cyber-dark-red/5 border border-cyber-dark-red/10 flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <Lock className="w-8 h-8 text-cyber-dark-red/40" />
-                                        <div>
-                                            <p className="font-bold text-white uppercase tracking-tight">Security Control</p>
-                                            <p className="text-xs text-white/30 font-medium">Authentication key rotation and password resets.</p>
-                                        </div>
-                                    </div>
-                                    <button className="px-6 py-2.5 rounded-xl bg-cyber-dark-red/10 border border-cyber-dark-red/20 text-cyber-dark-red text-xs font-black uppercase tracking-widest hover:bg-cyber-dark-red/20 transition-all">
-                                        Reset Password
-                                    </button>
-                                </div>
+
                             </div>
                         </motion.div>
                     )}
@@ -257,7 +254,6 @@ const SettingsPage = () => {
                             </div>
                         </motion.div>
                     )}
-
                 </div>
             </div>
         </div>

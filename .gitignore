@@ -30,4 +30,10 @@ dist-ssr
 .env.test.local
 .env.production.local
 
+# Firebase
+.firebase/
+*-debug.log*
+google-services.json
+GoogleService-Info.plist
+
 *.nosync

@@ -5,8 +5,10 @@ import ReportDetailsPage from './pages/ReportDetailsPage';
 import CitizenReports from './pages/CitizenReports';
 import PhotoVerificationPage from './pages/PhotoVerificationPage';
 import SettingsPage from './pages/SettingsPage';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
-function App() {
+function AppContent() {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [viewedReport, setViewedReport] = useState(null);
     const [verifyingReport, setVerifyingReport] = useState(null);
@@ -93,6 +95,16 @@ function App() {
                 )}
             </main>
         </div>
+    );
+}
+
+function App() {
+    return (
+        <AuthProvider>
+            <ProtectedRoute>
+                <AppContent />
+            </ProtectedRoute>
+        </AuthProvider>
     );
 }
 
