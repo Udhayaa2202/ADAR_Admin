@@ -134,7 +134,6 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
             return;
         }
 
-        // If we already have results (e.g. returning from details), don't auto-scan
         if (results) {
             setVerificationStep(3);
             setLocalResults(results);
@@ -144,7 +143,7 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
         const timers = startVerification();
 
         return () => timers.forEach(clearTimeout);
-    }, [report]); // Only re-run if report ID changes
+    }, [report]);
 
     if (!report) {
         const filteredHistory = (historyReports || []).filter(r =>
@@ -181,7 +180,7 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                                     type="text"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Search Report ID or User..."
+                                    placeholder="Search By Report ID or User Id"
                                     className="pl-12 pr-6 py-3 bg-white/5 border border-white/10 rounded-2xl text-sm text-white focus:outline-none focus:border-cyber-dark-accent/50 w-full md:w-[350px] transition-all"
                                 />
                             </div>

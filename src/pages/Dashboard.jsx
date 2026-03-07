@@ -131,8 +131,7 @@ const Dashboard = ({ onViewReport }) => {
     const categoryData = processCategoryData();
 
     const getStatsForRange = (rangeReports, allReports) => {
-        // A user is a "New Install" if their earliest report in the entire dataset 
-        // falls within the current rangeReports set.
+    
         const usersInRange = [...new Set(rangeReports.map(r => r.userId))];
         
         const newInstalls = usersInRange.filter(userId => {

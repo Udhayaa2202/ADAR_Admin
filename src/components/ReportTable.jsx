@@ -60,7 +60,9 @@ const ReportTable = ({ reports, onSelectReport }) => {
     const [statusFilter, setStatusFilter] = useState('All');
 
     const filteredReports = reports.filter(report => {
-        const matchesSearch = (report.id || '').toLowerCase().includes(searchTerm.toLowerCase());
+        const term = searchTerm.toLowerCase();
+        const matchesSearch = (report.id || '').toLowerCase().includes(term) ||
+            (report.userId && typeof report.userId === 'string' && report.userId.toLowerCase().includes(term));
         const matchesStatus = statusFilter === 'All' || report.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
@@ -72,14 +74,13 @@ const ReportTable = ({ reports, onSelectReport }) => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                     <input
                         type="text"
-                        inputMode="numeric"
-                        placeholder="Search by 6-digit ID (e.g. 267428)..."
+                        inputMode="text"
+                        placeholder="Search By Report ID or User Id"
                         value={searchTerm}
                         onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, '').slice(0, 6);
-                            setSearchTerm(val);
+                            setSearchTerm(e.target.value);
                         }}
-                        className="w-full bg-[#0D1B2A] border border-white/5 rounded-xl py-2.5 pl-10 pr-4 text-sm tracking-[0.2em] focus:outline-none focus:border-cyber-dark-accent/50 transition-colors placeholder:tracking-normal"
+                        className="w-full bg-[#0D1B2A] border border-white/5 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-cyber-dark-accent/50 transition-colors"
                     />
                 </div>
 
@@ -107,12 +108,12 @@ const ReportTable = ({ reports, onSelectReport }) => {
             <div className="flex-1 overflow-auto min-h-0 custom-scrollbar">
                 <table className="w-full text-left">
                     <thead>
-                        <tr className="bg-white/2 pb-4">
-                            <th className="px-6 py-4 text-xs font-bold text-white/30 uppercase tracking-widest font-sans">Report ID</th>
-                            <th className="px-6 py-4 text-xs font-bold text-white/30 uppercase tracking-widest font-sans">Status</th>
-                            <th className="px-6 py-4 text-xs font-bold text-white/30 uppercase tracking-widest font-sans">Trust Score</th>
-                            <th className="px-6 py-4 text-xs font-bold text-white/30 uppercase tracking-widest font-sans">Timestamp</th>
-                            <th className="px-6 py-4 text-xs font-bold text-white/30 uppercase tracking-widest font-sans text-right">Actions</th>
+                        <tr className="bg-[#16213E] sticky top-0 z-10 border-b border-white/5">
+                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Report ID</th>
+                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Status</th>
+                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Trust Score</th>
+                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Timestamp</th>
+                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em] text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -128,7 +129,10 @@ const ReportTable = ({ reports, onSelectReport }) => {
                                     onClick={() => onSelectReport(report)}
                                 >
                                     <td className="px-6 py-4">
-                                        <span className="font-mono text-sm font-medium text-cyber-dark-accent">{report.id}</span>
+                                        <div className="flex flex-col">
+                                            <span className="font-mono text-sm font-bold text-cyber-dark-accent">{report.id}</span>
+                                            <span className="text-[9px] text-white/60 font-black uppercase">{report.userId || 'Anonymous'}</span>
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <StatusBadge status={report.status} />
