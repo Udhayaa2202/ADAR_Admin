@@ -9,7 +9,7 @@ const LiveReports = () => {
                 <h2 className="text-4xl font-black mb-4 tracking-tighter opacity-20 uppercase italic font-sans">
                     Live Feed Restricted
                 </h2>
-                <p className="text-white/30 font-medium tracking-widest uppercase text-xs font-sans">
+                <p className="text-white/70 font-medium tracking-widest uppercase text-xs font-sans">
                     Media access redirected to Dashboard Details view.
                 </p>
             </div>

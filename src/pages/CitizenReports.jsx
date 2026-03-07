@@ -33,10 +33,10 @@ const CitizenReports = ({ onViewReport }) => {
         <div className="flex-1 p-8 space-y-8 max-w-7xl mx-auto font-sans h-full flex flex-col overflow-hidden">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
                 <div>
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+                    <h2 className="text-3xl font-black bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent italic tracking-tighter uppercase">
                         Citizen Reports
                     </h2>
-                    <p className="text-white/40 mt-1 font-medium italic">Approved community signals and active incident reports.</p>
+                    <p className="text-white/70 mt-1 font-medium italic">Approved community signals and active incident reports.</p>
                 </div>
                 <div className="flex items-center gap-3 text-right">
                     <button

@@ -221,10 +221,10 @@ const Dashboard = ({ onViewReport }) => {
         <div className="h-full flex flex-col p-6 gap-6 font-sans overflow-y-auto custom-scrollbar">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-2 shrink-0">
                 <div>
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+                    <h2 className="text-3xl font-black bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent italic tracking-tighter uppercase">
                         ADAR Insight Deck
                     </h2>
-                    <p className="text-[10px] text-white/40 mt-0.5 font-medium italic uppercase tracking-wider">Real-time service integrity & reporting trust mission control.</p>
+                    <p className="text-[10px] text-white/70 mt-0.5 font-medium italic uppercase tracking-wider">Real-time service integrity & reporting trust mission control.</p>
                 </div>
             </header>
 

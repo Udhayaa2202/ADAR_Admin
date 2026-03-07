@@ -356,7 +356,7 @@ const ReportDetailsPage = ({ report, onBack, onVerifyPhoto, onRefresh }) => {
                                             {selectedReasons.includes('Others') ? 'CUSTOM REASON ACTIVE' : `${selectedReasons.length}/3 SELECTED`}
                                         </span>
                                     </div>
-                                    <p className="text-white/40 text-sm italic border-l-2 border-red-500/20 pl-3">
+                                    <p className="text-white/70 text-sm italic border-l-2 border-red-500/20 pl-3">
                                         {selectedReasons.includes('Others')
                                             ? "Please specify the custom reason for rejection below."
                                             : "Admins must select a minimum of 3 reasons to justify rejection."}
@@ -564,7 +564,7 @@ const ReportDetailsPage = ({ report, onBack, onVerifyPhoto, onRefresh }) => {
                                 </div>
                                 <div className="space-y-4 flex flex-col justify-center">
                                     <div className="bg-white/2 p-4 rounded-xl border border-white/5 space-y-2 text-center md:text-left">
-                                        <p className="text-[10px] text-white/30 uppercase font-bold">Physical Address</p>
+                                        <p className="text-[10px] text-white/60 uppercase font-bold">Physical Address</p>
                                         <p className="text-xs text-white/70 leading-relaxed">
                                             {report.location || "No address data attached."}
                                         </p>
@@ -572,7 +572,7 @@ const ReportDetailsPage = ({ report, onBack, onVerifyPhoto, onRefresh }) => {
                                     <div className="flex items-center justify-between text-[10px] px-1 bg-white/[0.02] p-3 rounded-lg border border-white/5">
                                         <div className="flex items-center gap-2">
                                             <Shield className="w-3 h-3 text-white/20" />
-                                            <span className="text-white/40 uppercase font-bold">Coordinates</span>
+                                            <span className="text-white/70 uppercase font-bold">Coordinates</span>
                                         </div>
                                         <span className="font-mono text-white/70">
                                             {hasCoordinates ? `${mapLat}, ${mapLng}` : 'N/A'}
@@ -580,27 +580,27 @@ const ReportDetailsPage = ({ report, onBack, onVerifyPhoto, onRefresh }) => {
                                     </div>
                                     {/* Zone Legend */}
                                     <div className="bg-white/[0.02] p-4 rounded-xl border border-white/5 space-y-3">
-                                        <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest">Zone Indicators</p>
+                                        <p className="text-[10px] text-white/60 uppercase font-bold tracking-widest">Zone Indicators</p>
                                         <div className="space-y-2.5">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-4 h-4 rounded-full border-2 border-dashed border-[#EF233C] bg-[#EF233C]/20 shrink-0" />
                                                 <div>
                                                     <p className="text-[11px] font-bold text-[#EF233C]">Red Zone</p>
-                                                    <p className="text-[9px] text-white/40">3+ reports within 2km</p>
+                                                    <p className="text-[9px] text-white/70">3+ reports within 2km</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <div className="w-4 h-4 rounded-full border-2 border-dashed border-[#FFBE0B] bg-[#FFBE0B]/20 shrink-0" />
                                                 <div>
                                                     <p className="text-[11px] font-bold text-[#FFBE0B]">Watch Zone</p>
-                                                    <p className="text-[9px] text-white/40">2 reports within 2km</p>
+                                                    <p className="text-[9px] text-white/70">2 reports within 2km</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <div className="w-4 h-4 rounded-full border-2 border-[#3A86FF] bg-[#3A86FF]/20 shrink-0" />
                                                 <div>
                                                     <p className="text-[11px] font-bold text-[#3A86FF]">Single Report</p>
-                                                    <p className="text-[9px] text-white/40">No zone — marker only</p>
+                                                    <p className="text-[9px] text-white/70">No zone — marker only</p>
                                                 </div>
                                             </div>
                                         </div>

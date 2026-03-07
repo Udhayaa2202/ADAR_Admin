@@ -140,7 +140,7 @@ const SettingsPage = () => {
                                                 </span>
                                             </div>
                                         </div>
-                                        <p className="text-white/60 font-bold italic uppercase tracking-[0.2em] text-sm flex items-center gap-2">
+                                        <p className="text-white/85 font-bold italic uppercase tracking-[0.2em] text-sm flex items-center gap-2">
                                             <span className="w-4 h-[1px] bg-cyber-dark-accent" />
                                             Chief Intelligence Officer <br />ADAR Lead
                                         </p>
@@ -150,7 +150,7 @@ const SettingsPage = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-white/5">
                                     <div className="space-y-6">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Account Email</label>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/60 ml-1">Account Email</label>
                                             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5">
                                                 <Mail className="w-4 h-4 text-white/20" />
                                                 <span className="text-white/80 font-medium">{user?.email || 'admin@adar.center'}</span>
@@ -158,7 +158,7 @@ const SettingsPage = () => {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Contact </label>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/60 ml-1">Contact </label>
                                             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5">
                                                 <Phone className="w-4 h-4 text-white/20" />
                                                 <span className="text-white/80 font-medium">
@@ -178,7 +178,7 @@ const SettingsPage = () => {
 
                                     <div className="space-y-6">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Last Login</label>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/60 ml-1">Last Login</label>
                                             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5">
                                                 <Activity className="w-4 h-4 text-cyber-dark-accent/40" />
                                                 <span className="text-white/80 font-medium italic uppercase tracking-wider">
@@ -188,7 +188,7 @@ const SettingsPage = () => {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">Member Since</label>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/60 ml-1">Member Since</label>
                                             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/5">
                                                 <Calendar className="w-4 h-4 text-white/20" />
                                                 <span className="text-white/80 font-medium uppercase tracking-wider">MARCH 2026</span>
@@ -212,7 +212,7 @@ const SettingsPage = () => {
                                 <Activity className="w-8 h-8 text-cyber-dark-green" />
                                 <div>
                                     <h3 className="text-xl font-bold uppercase tracking-tight">System Health</h3>
-                                    <p className="text-sm font-medium text-white/30 italic tracking-wide">Real-time infrastructure health monitoring.</p>
+                                    <p className="text-sm font-medium text-white/70 italic tracking-wide">Real-time infrastructure health monitoring.</p>
                                 </div>
                             </div>
 
@@ -226,7 +226,7 @@ const SettingsPage = () => {
                                             <span className="text-sm font-black uppercase tracking-widest text-white/70">Firestore Grid</span>
                                         </div>
                                         <div className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-widest ${firebaseStatus === 'Operational' ? 'bg-cyber-dark-green/10 text-cyber-dark-green' :
-                                            firebaseStatus === 'Checking...' ? 'bg-white/10 text-white/40' : 'bg-cyber-dark-red/10 text-cyber-dark-red'
+                                            firebaseStatus === 'Checking...' ? 'bg-white/10 text-white/70' : 'bg-cyber-dark-red/10 text-cyber-dark-red'
                                             }`}>
                                             {firebaseStatus}
                                         </div>
@@ -248,7 +248,7 @@ const SettingsPage = () => {
                                             <span className="text-sm font-black uppercase tracking-widest text-white/70">Supabase Storage</span>
                                         </div>
                                         <div className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-widest ${supabaseStatus === 'Operational' ? 'bg-cyber-dark-green/10 text-cyber-dark-green' :
-                                            supabaseStatus === 'Checking...' ? 'bg-white/10 text-white/40' : 'bg-cyber-dark-red/10 text-cyber-dark-red'
+                                            supabaseStatus === 'Checking...' ? 'bg-white/10 text-white/70' : 'bg-cyber-dark-red/10 text-cyber-dark-red'
                                             }`}>
                                             {supabaseStatus}
                                         </div>

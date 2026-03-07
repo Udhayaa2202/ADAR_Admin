@@ -17,7 +17,7 @@ const TrustAnalyticsPage = () => {
                     <h2 className="text-3xl font-black uppercase tracking-tighter bg-gradient-to-r from-white to-white/40 bg-clip-text text-transparent">
                         Trust Analytics
                     </h2>
-                    <p className="text-sm text-white/40 font-medium tracking-widest uppercase italic">
+                    <p className="text-sm text-white/70 font-medium tracking-widest uppercase italic">
                         Module contents have been removed per request.
                     </p>
                 </div>

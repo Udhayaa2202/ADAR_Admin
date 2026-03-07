@@ -162,7 +162,7 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                                 <span className="text-xs font-black uppercase tracking-[0.2em]">Forensic Audit Log</span>
                             </div>
                             <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Verification History</h1>
-                            <p className="text-white/40 font-mono text-xs uppercase tracking-widest leading-relaxed">
+                            <p className="text-white/70 font-mono text-xs uppercase tracking-widest leading-relaxed">
                                 Review forensic data for all submitted citizen reports
                             </p>
                         </div>
@@ -221,7 +221,7 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                                                     <td className="px-6 py-4">
                                                         <div className="flex flex-col">
                                                             <span className="font-mono text-sm font-bold text-cyber-dark-accent">{r.id}</span>
-                                                            <span className="text-[9px] text-white/30 font-black uppercase">{r.userId || 'Anonymous'}</span>
+                                                            <span className="text-[9px] text-white/60 font-black uppercase">{r.userId || 'Anonymous'}</span>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
@@ -245,7 +245,7 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                                                     <td className="px-6 py-4">
                                                         <div className="flex flex-col max-w-[200px]">
                                                             <span className="text-white font-bold text-[11px] truncate uppercase">{r.activity_type || 'INCIDENT'}</span>
-                                                            <span className="text-white/40 text-[10px] truncate">{r.location || 'Unknown'}</span>
+                                                            <span className="text-white/70 text-[10px] truncate">{r.location || 'Unknown'}</span>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
@@ -254,7 +254,7 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                                                                 e.stopPropagation();
                                                                 onSelectReport(r);
                                                             }}
-                                                            className="px-4 py-2 bg-white/5 hover:bg-cyber-dark-accent rounded-xl text-[10px] font-black text-white/40 hover:text-white border border-white/5 hover:border-cyber-dark-accent transition-all flex items-center gap-2 ml-auto uppercase italic tracking-widest group/btn"
+                                                            className="px-4 py-2 bg-white/5 hover:bg-cyber-dark-accent rounded-xl text-[10px] font-black text-white/70 hover:text-white border border-white/5 hover:border-cyber-dark-accent transition-all flex items-center gap-2 ml-auto uppercase italic tracking-widest group/btn"
                                                         >
                                                             <RefreshCcw className="w-3 h-3 group-hover/btn:rotate-180 transition-transform duration-500" />
                                                             Re-Scan
@@ -298,7 +298,7 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                                 <span className="text-xs font-black uppercase tracking-[0.2em]">Forensic Analysis</span>
                             </div>
                             <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Photo Verification</h1>
-                            <p className="text-white/40 font-mono text-xs uppercase tracking-widest leading-relaxed">Report ID: {report.id}</p>
+                            <p className="text-white/70 font-mono text-xs uppercase tracking-widest leading-relaxed">Report ID: {report.id}</p>
                         </div>
                     </div>
 
@@ -318,7 +318,7 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                             <span className="text-[10px] text-white/70 uppercase font-black tracking-widest">View Full Report</span>
                         </button>
                         <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl flex flex-col gap-1 min-w-[150px]">
-                            <span className="text-[10px] text-white/40 uppercase font-black">Meta Integrity</span>
+                            <span className="text-[10px] text-white/70 uppercase font-black">Meta Integrity</span>
                             <span className={`text-sm font-bold ${localResults ? (localResults.isMatch ? 'text-cyber-dark-green' : 'text-cyber-dark-red') : 'text-white/20'}`}>
                                 {localResults ? (localResults.isMatch ? 'MATCH' : 'MISMATCH') : 'ANALYZING...'}
                             </span>
@@ -365,7 +365,7 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                                     <ShieldCheck className={`w-6 h-6 ${localResults ? (localResults.isLive ? 'text-cyber-dark-green' : 'text-cyber-dark-amber') : 'text-white/20'}`} />
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Capture Source</p>
+                                    <p className="text-[10px] text-white/70 uppercase font-black tracking-widest">Capture Source</p>
                                     <h4 className="text-white font-bold text-lg">
                                         {localResults ? (localResults.isLive ? 'LIVE CAMERA' : 'GALLERY UPLOAD') : 'DETECTING SOURCE...'}
                                     </h4>
@@ -402,7 +402,7 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                                     <div className={`p-4 rounded-2xl border transition-all duration-500 ${verificationStep >= 1 ? 'bg-white/5 border-white/10' : 'opacity-20 border-white/5'}`}>
                                         <div className="flex items-start justify-between">
                                             <div className="space-y-1">
-                                                <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Reported Location</p>
+                                                <p className="text-[10px] text-white/70 uppercase font-black tracking-widest">Reported Location</p>
                                                 <h4 className="text-white font-mono text-lg truncate max-w-[300px]">
                                                     {verificationStep >= 1 ? currentVerification.reportedLocation : 'INITIALIZING...'}
                                                 </h4>
@@ -430,7 +430,7 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                                         <div className="flex items-start justify-between">
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2">
-                                                    <p className="text-[10px] text-white/40 uppercase font-black tracking-widest">Forensic Location Source</p>
+                                                    <p className="text-[10px] text-white/70 uppercase font-black tracking-widest">Forensic Location Source</p>
                                                     {verificationStep >= 2 && (
                                                         <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase border ${currentVerification.dataLabel === 'DEVICE_SIGNATURE'
                                                             ? 'bg-cyber-dark-accent/20 text-cyber-dark-accent border-cyber-dark-accent/30'
@@ -460,7 +460,7 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                                                         </span>
                                                     </div>
                                                 )}
-                                                <p className="text-[9px] text-white/30 font-bold uppercase italic mt-1">
+                                                <p className="text-[9px] text-white/60 font-bold uppercase italic mt-1">
                                                     {verificationStep >= 2 ? (currentVerification.isLive ? '(Hardware-stamped live GPS)' : `(Metadata Analysis: Source ${currentVerification.dataLabel})`) : 'ANALYZING FILE HEADERS'}
                                                 </p>
                                             </div>

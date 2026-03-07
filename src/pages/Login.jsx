@@ -45,7 +45,7 @@ const Login = () => {
                         <LucideShieldCheck className="w-10 h-10 text-cyber-dark-accent" />
                     </div>
                     <h1 className="text-3xl font-black tracking-tighter text-white uppercase italic">ADAR ADMIN</h1>
-                    <p className="text-white/40 text-sm font-medium tracking-widest uppercase mt-1">Authorized Personnel Only</p>
+                    <p className="text-white/70 text-sm font-medium tracking-widest uppercase mt-1">Authorized Personnel Only</p>
                 </div>
 
                 <div className="glass-card p-8 bg-white/[0.02] border-white/5 relative">
@@ -69,7 +69,7 @@ const Login = () => {
 
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-white/40 uppercase tracking-widest flex items-center gap-2">
+                                <label className="text-xs font-bold text-white/70 uppercase tracking-widest flex items-center gap-2">
                                     <LucideMail className="w-3 h-3" /> Email Address
                                 </label>
                                 <input
@@ -83,7 +83,7 @@ const Login = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-white/40 uppercase tracking-widest flex items-center gap-2">
+                                <label className="text-xs font-bold text-white/70 uppercase tracking-widest flex items-center gap-2">
                                     <LucideLock className="w-3 h-3" /> Password
                                 </label>
                                 <input
