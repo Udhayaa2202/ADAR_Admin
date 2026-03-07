@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
@@ -9,12 +9,16 @@ import SettingsPage from './pages/SettingsPage';
 import Login from './pages/Login';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import { fetchAllReports } from './services/dataService';
 
 function AppContent() {
-    const [activeTab, setActiveTab] = useState('dashboard');
+    const [activeTab, setActiveTab] = useState(() => {
+        return sessionStorage.getItem('activeTab') || 'dashboard';
+    });
     const [viewedReport, setViewedReport] = useState(null);
     const [verifyingReport, setVerifyingReport] = useState(null);
     const [verifyingResults, setVerifyingResults] = useState(null);
+    const isRestoringRef = React.useRef(true);
 
     const handleViewReport = (report) => {
         setViewedReport(report);
@@ -32,6 +36,7 @@ function AppContent() {
     };
 
     React.useEffect(() => {
+        sessionStorage.setItem('activeTab', activeTab);
         if (activeTab !== 'photo-verification') {
             setVerifyingReport(null);
             setVerifyingResults(null);
@@ -45,6 +50,53 @@ function AppContent() {
         };
         window.addEventListener('changeTab', handleTabChange);
         return () => window.removeEventListener('changeTab', handleTabChange);
+    }, []);
+
+    // Persist verifyingReport ID (skip on initial mount to avoid race condition)
+    useEffect(() => {
+        if (isRestoringRef.current) return;
+        if (verifyingReport) {
+            sessionStorage.setItem('verifyingReportId', verifyingReport.id);
+        } else {
+            sessionStorage.removeItem('verifyingReportId');
+        }
+    }, [verifyingReport]);
+
+    // Persist viewedReport ID (skip on initial mount)
+    useEffect(() => {
+        if (isRestoringRef.current) return;
+        if (viewedReport) {
+            sessionStorage.setItem('viewedReportId', viewedReport.id);
+        } else {
+            sessionStorage.removeItem('viewedReportId');
+        }
+    }, [viewedReport]);
+
+    // Restore saved report state on reload
+    useEffect(() => {
+        const savedVerifyId = sessionStorage.getItem('verifyingReportId');
+        const savedViewedId = sessionStorage.getItem('viewedReportId');
+
+        if (!savedVerifyId && !savedViewedId) {
+            isRestoringRef.current = false;
+            return;
+        }
+
+        fetchAllReports()
+            .then(reports => {
+                if (savedVerifyId) {
+                    const found = reports.find(r => r.id === savedVerifyId);
+                    if (found) setVerifyingReport(found);
+                }
+                if (savedViewedId) {
+                    const found = reports.find(r => r.id === savedViewedId);
+                    if (found) setViewedReport(found);
+                }
+            })
+            .catch(console.error)
+            .finally(() => {
+                isRestoringRef.current = false;
+            });
     }, []);
 
     return (
