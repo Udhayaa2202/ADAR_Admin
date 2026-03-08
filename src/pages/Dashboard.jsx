@@ -8,7 +8,8 @@ import {
     TrendingUp,
     Activity,
     Calendar,
-    Loader2
+    Loader2,
+    Info
 } from 'lucide-react';
 import {
     XAxis,
@@ -51,17 +52,31 @@ const Dashboard = ({ onViewReport }) => {
     const processChartData = () => {
         if (!reports.length) return [];
 
+        // Use YYYY-MM-DD / YYYY-MM keys for proper sorting, display labels separately
+        const toSortKey = (d) => {
+            if (viewType === 'daily') {
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            }
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        };
+
+        const toLabel = (d) => {
+            if (viewType === 'daily') {
+                return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }
+            return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        };
+
         const dataMap = {};
 
         reports.forEach(report => {
             const date = report.createdAt?.toDate ? report.createdAt.toDate() : new Date(report.incidentDate || Date.now());
-            const key = viewType === 'daily'
-                ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                : date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            const key = toSortKey(date);
 
             if (!dataMap[key]) {
                 dataMap[key] = {
-                    name: key,
+                    name: toLabel(date),
+                    _sortKey: key,
                     Approved: 0,
                     Flagged: 0,
                     'Under Review': 0,
@@ -81,18 +96,20 @@ const Dashboard = ({ onViewReport }) => {
             }
         });
 
-        return Object.values(dataMap).reverse().map(item => ({
-            ...item,
-            total: item.Approved + item.Flagged + item['Under Review'] + item.Rejected,
-            userCount: item._userIds.size,
-
-            statusAverages: {
-                Approved: item._trustCounts.Approved > 0 ? (item._trustSums.Approved / item._trustCounts.Approved).toFixed(1) : "0",
-                'Under Review': item._trustCounts['Under Review'] > 0 ? (item._trustSums['Under Review'] / item._trustCounts['Under Review']).toFixed(1) : "0",
-                Flagged: item._trustCounts.Flagged > 0 ? (item._trustSums.Flagged / item._trustCounts.Flagged).toFixed(1) : "0",
-                Rejected: item._trustCounts.Rejected > 0 ? (item._trustSums.Rejected / item._trustCounts.Rejected).toFixed(1) : "0"
-            }
-        }));
+        // Sort chronologically (oldest first) — only dates with reports
+        return Object.entries(dataMap)
+            .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+            .map(([, item]) => ({
+                ...item,
+                total: item.Approved + item.Flagged + item['Under Review'] + item.Rejected,
+                userCount: item._userIds.size,
+                statusAverages: {
+                    Approved: item._trustCounts.Approved > 0 ? (item._trustSums.Approved / item._trustCounts.Approved).toFixed(1) : "0",
+                    'Under Review': item._trustCounts['Under Review'] > 0 ? (item._trustSums['Under Review'] / item._trustCounts['Under Review']).toFixed(1) : "0",
+                    Flagged: item._trustCounts.Flagged > 0 ? (item._trustSums.Flagged / item._trustCounts.Flagged).toFixed(1) : "0",
+                    Rejected: item._trustCounts.Rejected > 0 ? (item._trustSums.Rejected / item._trustCounts.Rejected).toFixed(1) : "0"
+                }
+            }));
     };
 
     const chartData = processChartData();
@@ -396,10 +413,14 @@ const Dashboard = ({ onViewReport }) => {
                                 <XAxis
                                     dataKey="name"
                                     stroke="rgba(255,255,255,0.4)"
-                                    fontSize={10}
+                                    fontSize={9}
                                     tickLine={false}
                                     axisLine={false}
-                                    dy={10}
+                                    interval={0}
+                                    angle={-45}
+                                    textAnchor="end"
+                                    height={50}
+                                    dy={5}
                                 />
                                 <YAxis
                                     stroke="rgba(255,255,255,0.4)"
@@ -432,12 +453,21 @@ const Dashboard = ({ onViewReport }) => {
                             </AreaChart>
                         </ResponsiveContainer>
                     </motion.div>
+
+                    {/* Info notice inside the graph card */}
+                    <div className="flex items-center gap-2 px-1 shrink-0">
+                        <div className="flex-shrink-0 w-[16px] h-[16px] rounded-full border border-cyber-dark-accent/40 flex items-center justify-center bg-cyber-dark-accent/10">
+                            <span className="text-[9px] font-black text-cyber-dark-accent leading-none">!</span>
+                        </div>
+                        <span className="text-[9px] text-white/60 italic leading-tight">The graph displays only the dates on which reports were received. If a date is not shown, no reports were submitted on that day.</span>
+                    </div>
                 </div>
 
                 <div className="lg:col-span-1 h-full">
                     <TopReporters reports={reports} />
                 </div>
             </div>
+
         </div>
     );
 };
