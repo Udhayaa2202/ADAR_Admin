@@ -11,14 +11,15 @@ const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [transitioning, setTransitioning] = useState(false);
     const { login, user } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (user) {
+        if (user && !transitioning) {
             navigate('/', { replace: true });
         }
-    }, [user, navigate]);
+    }, [user, navigate, transitioning]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -27,13 +28,16 @@ const Login = () => {
 
         try {
             await login(email, password);
-            navigate('/', { replace: true });
+            setTransitioning(true);
+            setLoading(false);
+            setTimeout(() => {
+                navigate('/', { replace: true });
+            }, 1400);
         } catch (err) {
             console.error(err);
             setError(err.message.includes('auth/invalid-credential')
                 ? 'Invalid email or password'
                 : 'Failed to sign in. Please try again.');
-        } finally {
             setLoading(false);
         }
     };
@@ -42,9 +46,61 @@ const Login = () => {
         <div className="min-h-screen bg-cyber-dark flex items-center justify-center p-6 relative overflow-hidden">
             <CyberGrid />
 
+            {/* Transition overlay — cinematic flash sweep */}
+            <AnimatePresence>
+                {transitioning && (
+                    <motion.div
+                        className="fixed inset-0 z-[100] pointer-events-none"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.6, delay: 0.3 }}
+                    >
+                        {/* Radial glow burst from center */}
+                        <motion.div
+                            className="absolute inset-0"
+                            initial={{ opacity: 0, scale: 0.3 }}
+                            animate={{ opacity: [0, 1, 1, 0], scale: [0.3, 1.2, 2, 3] }}
+                            transition={{ duration: 1.2, times: [0, 0.3, 0.6, 1], ease: "easeOut" }}
+                            style={{
+                                background: 'radial-gradient(circle, rgba(58,134,255,0.6) 0%, rgba(58,134,255,0.1) 40%, transparent 70%)',
+                            }}
+                        />
+                        {/* White flash */}
+                        <motion.div
+                            className="absolute inset-0 bg-white"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: [0, 0, 0.8, 1] }}
+                            transition={{ duration: 1.2, times: [0, 0.5, 0.8, 1], ease: "easeIn" }}
+                        />
+                        {/* Horizontal scan lines splitting from center */}
+                        <motion.div
+                            className="absolute left-0 right-0 h-[2px]"
+                            initial={{ top: '50%', opacity: 0 }}
+                            animate={{ top: ['50%', '0%'], opacity: [1, 0] }}
+                            transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+                            style={{ background: 'linear-gradient(90deg, transparent, #3A86FF, transparent)', boxShadow: '0 0 20px 5px rgba(58,134,255,0.5)' }}
+                        />
+                        <motion.div
+                            className="absolute left-0 right-0 h-[2px]"
+                            initial={{ top: '50%', opacity: 0 }}
+                            animate={{ top: ['50%', '100%'], opacity: [1, 0] }}
+                            transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+                            style={{ background: 'linear-gradient(90deg, transparent, #3A86FF, transparent)', boxShadow: '0 0 20px 5px rgba(58,134,255,0.5)' }}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                animate={transitioning
+                    ? { opacity: 0, y: -30, scale: 0.9, filter: 'blur(8px)' }
+                    : { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }
+                }
+                transition={transitioning
+                    ? { duration: 0.5, ease: "easeIn" }
+                    : { duration: 0.5 }
+                }
                 className="w-full max-w-lg relative z-10"
             >
                 <div className="mb-10 text-center">
@@ -151,7 +207,7 @@ const Login = () => {
                         </div>
 
                         <button
-                            disabled={loading}
+                            disabled={loading || transitioning}
                             className="group relative w-full bg-cyber-dark-accent text-cyber-dark font-black uppercase tracking-tighter py-4 rounded-2xl overflow-hidden active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 mt-2 text-lg"
                         >
                             <div className="relative z-10 flex items-center justify-center gap-3">
@@ -159,6 +215,11 @@ const Login = () => {
                                     <>
                                         <LucideLoader2 className="w-5 h-5 animate-spin" />
                                         <span>Secure Login...</span>
+                                    </>
+                                ) : transitioning ? (
+                                    <>
+                                        <LucideLoader2 className="w-5 h-5 animate-spin" />
+                                        <span>Entering Dashboard...</span>
                                     </>
                                 ) : (
                                     <>

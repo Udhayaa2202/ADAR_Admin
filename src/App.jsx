@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import ReportDetailsPage from './pages/ReportDetailsPage';
@@ -100,7 +101,12 @@ function AppContent() {
     }, []);
 
     return (
-        <div className="flex min-h-screen bg-cyber-dark text-white selection:bg-cyber-dark-accent/30">
+        <motion.div
+            className="flex min-h-screen bg-cyber-dark text-white selection:bg-cyber-dark-accent/30"
+            initial={{ opacity: 0, scale: 1.02 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+        >
             {!viewedReport && <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />}
 
             <main className="flex-1 overflow-hidden h-screen">
@@ -144,7 +150,7 @@ function AppContent() {
                     </>
                 )}
             </main>
-        </div>
+        </motion.div>
     );
 }
 
