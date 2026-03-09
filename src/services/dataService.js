@@ -1,6 +1,31 @@
-import { collection, query, orderBy, getDocs, doc, updateDoc } from "firebase/firestore";
+import { collection, query, orderBy, getDocs, doc, updateDoc, onSnapshot } from "firebase/firestore";
 import { db } from "./firebase";
 import { supabase } from "./supabase";
+
+/**
+ * Subscribes to reports with real-time updates
+ * @param {Function} callback 
+ * @returns {Function} Unsubscribe function
+ */
+export const subscribeToReports = (callback) => {
+    const reportsRef = collection(db, "reports");
+    const q = query(reportsRef, orderBy("createdAt", "desc"));
+    
+    return onSnapshot(q, (snapshot) => {
+        const reports = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                timestamp: data.createdAt?.toDate ? data.createdAt.toDate().toLocaleString() : data.incidentDate || "Unknown",
+                evidenceUrls: data.evidenceUrls || {}
+            };
+        });
+        callback(reports);
+    }, (error) => {
+        console.error("Error subscribing to reports:", error);
+    });
+};
 
 /**
  * Fetches all reports from Firestore

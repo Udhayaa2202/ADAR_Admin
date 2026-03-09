@@ -19,7 +19,7 @@ const navItems = [
     { icon: Settings, label: 'Settings', id: 'settings' },
 ];
 
-const Sidebar = ({ activeTab, setActiveTab }) => {
+const Sidebar = ({ activeTab, setActiveTab, notificationCount }) => {
     const { logout } = useAuth();
 
     const handleSignOut = async () => {
@@ -54,10 +54,15 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
                         <item.icon className={`w-5 h-5 transition-transform duration-300 ${activeTab === item.id ? 'scale-110' : 'group-hover:scale-110'
                             }`} />
                         <span className="font-medium">{item.label}</span>
+                        {item.id === 'citizen-reports' && notificationCount > 0 && (
+                            <div className="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg shadow-red-500/20 animate-bounce">
+                                {notificationCount}
+                            </div>
+                        )}
                         {activeTab === item.id && (
                             <motion.div
                                 layoutId="active-indicator"
-                                className="ml-auto w-1.5 h-1.5 rounded-full bg-white"
+                                className={`ml-auto w-1.5 h-1.5 rounded-full bg-white ${notificationCount > 0 && item.id === 'citizen-reports' ? 'hidden' : ''}`}
                             />
                         )}
                     </button>

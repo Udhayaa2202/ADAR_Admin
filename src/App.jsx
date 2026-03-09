@@ -10,7 +10,7 @@ import SettingsPage from './pages/SettingsPage';
 import Login from './pages/Login';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import { fetchAllReports } from './services/dataService';
+import { subscribeToReports } from './services/dataService';
 
 function AppContent() {
     const [activeTab, setActiveTab] = useState(() => {
@@ -19,6 +19,10 @@ function AppContent() {
     const [viewedReport, setViewedReport] = useState(null);
     const [verifyingReport, setVerifyingReport] = useState(null);
     const [verifyingResults, setVerifyingResults] = useState(null);
+    const [newReportsCount, setNewReportsCount] = useState(0);
+    const [lastSeenReportCount, setLastSeenReportCount] = useState(() => {
+        return parseInt(localStorage.getItem('lastSeenReportCount') || '0');
+    });
     const isRestoringRef = React.useRef(true);
 
     const handleViewReport = (report) => {
@@ -75,6 +79,28 @@ function AppContent() {
 
     // Restore saved report state on reload
     useEffect(() => {
+        const unsubscribe = subscribeToReports((reports) => {
+            const currentCount = reports.length;
+            if (activeTab === 'citizen-reports') {
+                setLastSeenReportCount(currentCount);
+                localStorage.setItem('lastSeenReportCount', currentCount);
+                setNewReportsCount(0);
+            } else {
+                const diff = currentCount - lastSeenReportCount;
+                setNewReportsCount(diff > 0 ? diff : 0);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [activeTab, lastSeenReportCount]);
+
+    useEffect(() => {
+        if (activeTab === 'citizen-reports') {
+            setNewReportsCount(0);
+        }
+    }, [activeTab]);
+
+    useEffect(() => {
         const savedVerifyId = sessionStorage.getItem('verifyingReportId');
         const savedViewedId = sessionStorage.getItem('viewedReportId');
 
@@ -107,7 +133,13 @@ function AppContent() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
         >
-            {!viewedReport && <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />}
+            {!viewedReport && (
+                <Sidebar 
+                    activeTab={activeTab} 
+                    setActiveTab={setActiveTab} 
+                    notificationCount={newReportsCount}
+                />
+            )}
 
             <main className="flex-1 overflow-hidden h-screen">
                 {viewedReport ? (
