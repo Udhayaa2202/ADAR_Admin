@@ -57,4 +57,22 @@
 .animate-spin-slow {
     animation: spin-slow 8s linear infinite;
 }
-
+
+input::-ms-reveal,
+input::-ms-clear {
+    display: none;
+}
+
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    display: none !important;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+}
+
+input::-ms-reveal {
+    display: none;
+}
+
