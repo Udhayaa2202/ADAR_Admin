@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, ShieldCheck } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import ReportDetailsPage from './pages/ReportDetailsPage';
@@ -23,6 +24,7 @@ function AppContent() {
     const [lastSeenReportCount, setLastSeenReportCount] = useState(() => {
         return parseInt(localStorage.getItem('lastSeenReportCount') || '0');
     });
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const isRestoringRef = React.useRef(true);
 
     const handleViewReport = (report) => {
@@ -133,15 +135,34 @@ function AppContent() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
         >
-            {!viewedReport && (
-                <Sidebar 
-                    activeTab={activeTab} 
-                    setActiveTab={setActiveTab} 
-                    notificationCount={newReportsCount}
-                />
-            )}
+            <Sidebar 
+                activeTab={activeTab} 
+                setActiveTab={setActiveTab} 
+                notificationCount={newReportsCount}
+                isOpen={isSidebarOpen}
+                setIsOpen={setIsSidebarOpen}
+            />
 
-            <main className="flex-1 overflow-hidden h-screen">
+            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+                {/* Mobile Header */}
+                {!viewedReport && (
+                    <header className="lg:hidden flex items-center justify-between p-4 glass-card rounded-none border-x-0 border-t-0 border-b-white/10 sticky top-0 z-30">
+                        <div className="flex items-center gap-3">
+                            <div className="p-1.5 bg-cyber-dark-accent/20 rounded-md">
+                                <ShieldCheck className="w-6 h-6 text-cyber-dark-accent" />
+                            </div>
+                            <span className="font-bold tracking-tight text-white/90">ADAR ADMIN</span>
+                        </div>
+                        <button 
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="p-2 text-white/70 hover:text-white transition-colors"
+                        >
+                            <Menu className="w-6 h-6" />
+                        </button>
+                    </header>
+                )}
+
+                <main className="flex-1 overflow-y-auto">
                 {viewedReport ? (
                     <ReportDetailsPage
                         report={viewedReport}
@@ -181,7 +202,8 @@ function AppContent() {
                         )}
                     </>
                 )}
-            </main>
+                </main>
+            </div>
         </motion.div>
     );
 }

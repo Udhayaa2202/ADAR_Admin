@@ -69,7 +69,7 @@ const ReportTable = ({ reports, onSelectReport }) => {
 
     return (
         <div className="glass-card border-white/5 h-full flex flex-col overflow-hidden">
-            <div className="p-6 border-b border-white/5 flex flex-col md:flex-row gap-4 items-center justify-between shrink-0">
+            <div className="p-4 md:p-6 border-b border-white/5 flex flex-col md:flex-row gap-4 items-center justify-between shrink-0">
                 <div className="relative w-full md:w-80">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                     <input
@@ -84,20 +84,20 @@ const ReportTable = ({ reports, onSelectReport }) => {
                     />
                 </div>
 
-                <div className="flex items-center gap-4 w-full md:w-auto">
-                    <span className="text-xs font-bold text-white/30 uppercase tracking-widest whitespace-nowrap">
-                        Showing <span className="text-cyber-dark-accent">{filteredReports.length}</span> of {reports.length} Signals
+                <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
+                    <span className="text-[10px] md:text-xs font-bold text-white/30 uppercase tracking-widest whitespace-nowrap">
+                        Showing <span className="text-cyber-dark-accent">{filteredReports.length}</span> Signals
                     </span>
-                    <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-xl border border-white/5">
-                        <Filter className="w-4 h-4 text-white/50" />
+                    <div className="flex items-center gap-2 px-2 py-1.5 md:px-3 md:py-2 bg-white/5 rounded-xl border border-white/5">
+                        <Filter className="w-3.5 h-3.5 md:w-4 md:h-4 text-white/50" />
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="bg-transparent text-sm font-medium focus:outline-none cursor-pointer pr-2"
+                            className="bg-transparent text-[11px] md:text-sm font-medium focus:outline-none cursor-pointer pr-1 md:pr-2"
                         >
                             <option value="All" className="bg-[#16213E] text-white">All Status</option>
                             <option value="Verified" className="bg-[#16213E] text-white">Approved</option>
-                            <option value="Under Review" className="bg-[#16213E] text-white">Under Review</option>
+                            <option value="Under Review" className="bg-[#16213E] text-white">Review</option>
                             <option value="Flagged" className="bg-[#16213E] text-white">Flagged</option>
                             <option value="Rejected" className="bg-[#16213E] text-white">Rejected</option>
                         </select>
@@ -106,16 +106,17 @@ const ReportTable = ({ reports, onSelectReport }) => {
             </div>
 
             <div className="flex-1 overflow-auto min-h-0 custom-scrollbar">
-                <table className="w-full text-left">
-                    <thead>
-                        <tr className="bg-[#16213E] sticky top-0 z-10 border-b border-white/5">
-                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Report ID</th>
-                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Status</th>
-                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Trust Score</th>
-                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Timestamp</th>
-                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em] text-right">Actions</th>
-                        </tr>
-                    </thead>
+                <div className="min-w-[600px] md:min-w-full">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-[#16213E] sticky top-0 z-10 border-b border-white/5">
+                                <th className="px-4 md:px-6 py-4 md:py-5 text-[9px] md:text-[10px] font-black text-white/80 uppercase tracking-wider md:tracking-[0.2em]">Report ID</th>
+                                <th className="px-4 md:px-6 py-4 md:py-5 text-[9px] md:text-[10px] font-black text-white/80 uppercase tracking-wider md:tracking-[0.2em]">Status</th>
+                                <th className="px-4 md:px-6 py-4 md:py-5 text-[9px] md:text-[10px] font-black text-white/80 uppercase tracking-wider md:tracking-[0.2em]">Trust Score</th>
+                                <th className="px-4 md:px-6 py-4 md:py-5 text-[9px] md:text-[10px] font-black text-white/80 uppercase tracking-wider md:tracking-[0.2em]">Timestamp</th>
+                                <th className="px-4 md:px-6 py-4 md:py-5 text-[9px] md:text-[10px] font-black text-white/80 uppercase tracking-wider md:tracking-[0.2em] text-right">Actions</th>
+                            </tr>
+                        </thead>
                     <tbody className="divide-y divide-white/5">
                         <AnimatePresence mode="popLayout">
                             {filteredReports.map((report) => (
@@ -128,22 +129,22 @@ const ReportTable = ({ reports, onSelectReport }) => {
                                     className="hover:bg-white/2 transition-colors cursor-pointer group"
                                     onClick={() => onSelectReport(report)}
                                 >
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 md:px-6 py-4">
                                         <div className="flex flex-col">
                                             <span className="font-mono text-sm font-bold text-cyber-dark-accent">{report.id}</span>
                                             <span className="text-[9px] text-white/60 font-black uppercase">{report.userId || 'Anonymous'}</span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 md:px-6 py-4">
                                         <StatusBadge status={report.status} />
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 md:px-6 py-4">
                                         <TrustScore score={report.trustScore} />
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 md:px-6 py-4">
                                         <span className="text-sm text-white/50 whitespace-nowrap">{report.timestamp}</span>
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-4 md:px-6 py-4 text-right">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -159,8 +160,9 @@ const ReportTable = ({ reports, onSelectReport }) => {
                         </AnimatePresence>
                     </tbody>
                 </table>
+            </div>
 
-                {filteredReports.length === 0 && (
+            {filteredReports.length === 0 && (
                     <div className="py-20 flex flex-col items-center justify-center text-white/20">
                         <Search className="w-12 h-12 mb-4 opacity-10" />
                         <p className="text-lg font-medium">No reports found matching your criteria</p>
