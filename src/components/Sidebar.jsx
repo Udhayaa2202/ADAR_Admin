@@ -42,7 +42,7 @@ const Sidebar = ({ activeTab, setActiveTab, notificationCount, isOpen, setIsOpen
                 />
             )}
 
-            <aside className={`fixed inset-y-0 left-0 z-50 w-72 h-screen glass-card rounded-none border-y-0 border-l-0 border-r-white/10 flex flex-col p-6 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-screen ${
+            <aside className={`fixed inset-y-0 left-0 z-50 w-72 h-[100dvh] overflow-y-auto glass-card rounded-none border-y-0 border-l-0 border-r-white/10 flex flex-col p-6 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-screen ${
                 isOpen ? 'translate-x-0' : '-translate-x-full'
             }`}>
                 <div className="flex items-center justify-between mb-10 px-2">

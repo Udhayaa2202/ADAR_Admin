@@ -152,36 +152,36 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
         );
 
         return (
-            <div className="h-full overflow-y-auto custom-scrollbar p-8 bg-cyber-dark flex flex-col">
-                <div className="max-w-7xl mx-auto w-full space-y-8 flex-1 flex flex-col min-h-0">
-                    <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 shrink-0">
+            <div className="h-full overflow-y-auto custom-scrollbar p-4 md:p-8 bg-cyber-dark flex flex-col">
+                <div className="max-w-7xl mx-auto w-full space-y-4 md:space-y-8 flex-1 flex flex-col min-h-0">
+                    <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 shrink-0">
                         <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-cyber-dark-accent mb-2">
-                                <History className="w-5 h-5" />
-                                <span className="text-xs font-black uppercase tracking-[0.2em]">Forensic Audit Log</span>
+                            <div className="flex items-center gap-2 text-cyber-dark-accent mb-1 md:mb-2">
+                                <History className="w-4 h-4 md:w-5 md:h-5" />
+                                <span className="text-[9px] md:text-xs font-black uppercase tracking-[0.2em]">Forensic Audit Log</span>
                             </div>
-                            <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Verification History</h1>
-                            <p className="text-white/70 font-mono text-xs uppercase tracking-widest leading-relaxed">
+                            <h1 className="text-2xl md:text-4xl font-black text-white tracking-tighter uppercase italic">Verification History</h1>
+                            <p className="text-white/70 font-mono text-[9px] md:text-xs uppercase tracking-widest leading-relaxed">
                                 Review forensic data for all submitted citizen reports
                             </p>
                         </div>
 
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
                             <button
                                 onClick={() => onNavigate('citizen-reports')}
-                                className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl flex items-center gap-3 transition-all group"
+                                className="px-4 py-2.5 md:px-6 md:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl flex items-center justify-center gap-3 transition-all group"
                             >
                                 <FileText className="w-4 h-4 text-cyber-dark-accent group-hover:scale-110 transition-transform" />
-                                <span className="text-[10px] text-white/70 uppercase font-black tracking-widest whitespace-nowrap">Go to Reports</span>
+                                <span className="text-[9px] md:text-[10px] text-white/70 uppercase font-black tracking-widest whitespace-nowrap">Go to Reports</span>
                             </button>
-                            <div className="relative group">
+                            <div className="relative group flex-1 md:flex-none">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-cyber-dark-accent transition-colors" />
                                 <input
                                     type="text"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Search By Report ID or User Id"
-                                    className="pl-12 pr-6 py-3 bg-white/5 border border-white/10 rounded-2xl text-sm text-white focus:outline-none focus:border-cyber-dark-accent/50 w-full md:w-[350px] transition-all"
+                                    placeholder="Search By ID..."
+                                    className="pl-12 pr-6 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-2xl text-sm text-white focus:outline-none focus:border-cyber-dark-accent/50 w-full md:w-[250px] transition-all"
                                 />
                             </div>
                         </div>
@@ -194,18 +194,19 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                                 <p className="text-xs font-black uppercase tracking-widest">Compiling Forensic Database...</p>
                             </div>
                         ) : (
-                            <div className="flex-1 overflow-auto custom-scrollbar">
-                                <table className="w-full text-left">
-                                    <thead>
-                                        <tr className="bg-[#16213E] sticky top-0 z-10 border-b border-white/5">
-                                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Report ID</th>
-                                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Forensic Status</th>
-                                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Trust Score</th>
-                                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em]">Activity / Location</th>
-                                            <th className="px-6 py-5 text-[10px] font-black text-white/80 uppercase tracking-[0.2em] text-right">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-white/5">
+                            <div className="flex-1 overflow-auto custom-scrollbar scrollbar-hide">
+                                <div className="min-w-[600px]">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="bg-[#16213E] sticky top-0 z-10 border-b border-white/5">
+                                                <th className="px-4 md:px-6 py-4 md:py-5 text-[9px] md:text-[10px] font-black text-white/80 uppercase tracking-wider md:tracking-[0.2em]">Report ID</th>
+                                                <th className="px-4 md:px-6 py-4 md:py-5 text-[9px] md:text-[10px] font-black text-white/80 uppercase tracking-wider md:tracking-[0.2em]">Forensic Status</th>
+                                                <th className="px-4 md:px-6 py-4 md:py-5 text-[9px] md:text-[10px] font-black text-white/80 uppercase tracking-wider md:tracking-[0.2em]">Trust Score</th>
+                                                <th className="px-4 md:px-6 py-4 md:py-5 text-[9px] md:text-[10px] font-black text-white/80 uppercase tracking-wider md:tracking-[0.2em]">Activity / Location</th>
+                                                <th className="px-4 md:px-6 py-4 md:py-5 text-[9px] md:text-[10px] font-black text-white/80 uppercase tracking-wider md:tracking-[0.2em] text-right">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/5">
                                         {filteredHistory.map((r) => {
                                             const v = runVerificationLogic(r);
                                             return (
@@ -262,8 +263,9 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                                                 </motion.tr>
                                             );
                                         })}
-                                    </tbody>
-                                </table>
+                                        </tbody>
+                                    </table>
+                                </div>
 
                                 {filteredHistory.length === 0 && (
                                     <div className="py-20 flex flex-col items-center justify-center text-white/20">
@@ -280,45 +282,45 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
     }
 
     return (
-        <div className="h-full overflow-y-auto custom-scrollbar p-8 bg-cyber-dark">
-            <div className="max-w-5xl mx-auto space-y-8">
+        <div className="h-full overflow-y-auto custom-scrollbar p-4 md:p-8 bg-cyber-dark">
+            <div className="max-w-5xl mx-auto space-y-6 md:space-y-8">
                 {/* Header Section */}
                 <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="flex gap-4">
                         <button
                             onClick={() => onSelectReport(null)}
-                            className="p-2 hover:bg-white/5 rounded-xl transition-all text-white/50 hover:text-white border border-white/5 h-fit mt-auto mb-1"
+                            className="p-2 hover:bg-white/5 rounded-xl transition-all text-white/50 hover:text-white border border-white/5 h-fit mt-auto md:mb-1"
                         >
-                            <ArrowLeft className="w-5 h-5" />
+                            <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
                         </button>
                         <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-cyber-dark-accent mb-2">
-                                <ShieldCheck className="w-5 h-5" />
-                                <span className="text-xs font-black uppercase tracking-[0.2em]">Forensic Analysis</span>
+                            <div className="flex items-center gap-2 text-cyber-dark-accent mb-1 md:mb-2">
+                                <ShieldCheck className="w-4 h-4 md:w-5 md:h-5" />
+                                <span className="text-[9px] md:text-xs font-black uppercase tracking-[0.2em]">Forensic Analysis</span>
                             </div>
-                            <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Photo Verification</h1>
-                            <p className="text-white/70 font-mono text-xs uppercase tracking-widest leading-relaxed">Report ID: {report.id}</p>
+                            <h1 className="text-2xl md:text-4xl font-black text-white tracking-tighter uppercase italic">Verification</h1>
+                            <p className="text-white/70 font-mono text-[9px] md:text-xs uppercase tracking-widest leading-relaxed">Report ID: {report.id}</p>
                         </div>
                     </div>
 
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap gap-3 md:gap-4">
                         <button
                             onClick={startVerification}
-                            className="px-6 py-3 bg-cyber-dark-accent/10 hover:bg-cyber-dark-accent/20 border border-cyber-dark-accent/30 rounded-2xl flex items-center gap-3 transition-all group"
+                            className="flex-1 md:flex-none px-4 py-2.5 md:px-6 md:py-3 bg-cyber-dark-accent/10 hover:bg-cyber-dark-accent/20 border border-cyber-dark-accent/30 rounded-2xl flex items-center justify-center gap-3 transition-all group"
                         >
                             <RefreshCcw className="w-4 h-4 text-cyber-dark-accent group-hover:rotate-180 transition-transform duration-500" />
-                            <span className="text-[10px] text-white/70 uppercase font-black tracking-widest">Rescan</span>
+                            <span className="text-[9px] md:text-[10px] text-white/70 uppercase font-black tracking-widest">Rescan</span>
                         </button>
                         <button
                             onClick={() => onViewReport(report)}
-                            className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl flex items-center gap-3 transition-all group"
+                            className="flex-1 md:flex-none px-4 py-2.5 md:px-6 md:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl flex items-center justify-center gap-3 transition-all group"
                         >
                             <FileText className="w-4 h-4 text-cyber-dark-accent group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] text-white/70 uppercase font-black tracking-widest">View Full Report</span>
+                            <span className="text-[9px] md:text-[10px] text-white/70 uppercase font-black tracking-widest">Details</span>
                         </button>
-                        <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl flex flex-col gap-1 min-w-[150px]">
-                            <span className="text-[10px] text-white/70 uppercase font-black">Meta Integrity</span>
-                            <span className={`text-sm font-bold ${localResults ? (localResults.isMatch ? 'text-cyber-dark-green' : 'text-cyber-dark-red') : 'text-white/20'}`}>
+                        <div className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-white/5 border border-white/10 rounded-2xl flex items-center md:flex-col justify-between md:justify-center gap-1 min-w-0 md:min-w-[150px]">
+                            <span className="text-[9px] md:text-[10px] text-white/70 uppercase font-black">Meta Integrity</span>
+                            <span className={`text-xs md:text-sm font-bold ${localResults ? (localResults.isMatch ? 'text-cyber-dark-green' : 'text-cyber-dark-red') : 'text-white/20'}`}>
                                 {localResults ? (localResults.isMatch ? 'MATCH' : 'MISMATCH') : 'ANALYZING...'}
                             </span>
                         </div>

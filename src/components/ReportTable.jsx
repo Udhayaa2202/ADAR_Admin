@@ -68,38 +68,38 @@ const ReportTable = ({ reports, onSelectReport }) => {
     });
 
     return (
-        <div className="glass-card border-white/5 h-full flex flex-col overflow-hidden">
-            <div className="p-4 md:p-6 border-b border-white/5 flex flex-col md:flex-row gap-4 items-center justify-between shrink-0">
+        <div className="glass-card border-white/5 h-full flex flex-col overflow-hidden mx-auto w-full">
+            <div className="p-3 md:p-6 border-b border-white/5 flex flex-col md:flex-row gap-3 md:gap-4 items-center justify-between shrink-0">
                 <div className="relative w-full md:w-80">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 md:w-4 md:h-4 text-white/30" />
                     <input
                         type="text"
                         inputMode="text"
-                        placeholder="Search By Report ID or User Id"
+                        placeholder="Search Signals..."
                         value={searchTerm}
                         onChange={(e) => {
                             setSearchTerm(e.target.value);
                         }}
-                        className="w-full bg-[#0D1B2A] border border-white/5 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-cyber-dark-accent/50 transition-colors"
+                        className="w-full bg-[#0D1B2A] border border-white/5 rounded-xl py-2 md:py-2.5 pl-9 md:pl-10 pr-4 text-sm focus:outline-none focus:border-cyber-dark-accent/50 transition-colors"
                     />
                 </div>
 
-                <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
-                    <span className="text-[10px] md:text-xs font-bold text-white/30 uppercase tracking-widest whitespace-nowrap">
-                        Showing <span className="text-cyber-dark-accent">{filteredReports.length}</span> Signals
+                <div className="flex items-center justify-between md:justify-end gap-3 md:gap-4 w-full md:w-auto">
+                    <span className="text-[9px] md:text-xs font-bold text-white/30 uppercase tracking-widest whitespace-nowrap">
+                        <span className="text-cyber-dark-accent">{filteredReports.length}</span> Records
                     </span>
-                    <div className="flex items-center gap-2 px-2 py-1.5 md:px-3 md:py-2 bg-white/5 rounded-xl border border-white/5">
-                        <Filter className="w-3.5 h-3.5 md:w-4 md:h-4 text-white/50" />
+                    <div className="flex items-center gap-1.5 px-2 py-1.5 md:px-3 md:py-2 bg-white/5 rounded-xl border border-white/5">
+                        <Filter className="w-3 h-3 md:w-4 md:h-4 text-white/50" />
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="bg-transparent text-[11px] md:text-sm font-medium focus:outline-none cursor-pointer pr-1 md:pr-2"
+                            className="bg-transparent text-[10px] md:text-sm font-medium focus:outline-none cursor-pointer pr-1 md:pr-2"
                         >
-                            <option value="All" className="bg-[#16213E] text-white">All Status</option>
-                            <option value="Verified" className="bg-[#16213E] text-white">Approved</option>
-                            <option value="Under Review" className="bg-[#16213E] text-white">Review</option>
-                            <option value="Flagged" className="bg-[#16213E] text-white">Flagged</option>
-                            <option value="Rejected" className="bg-[#16213E] text-white">Rejected</option>
+                            <option value="All" className="bg-[#16213E] text-white text-xs">All Status</option>
+                            <option value="Verified" className="bg-[#16213E] text-white text-xs">Approved</option>
+                            <option value="Under Review" className="bg-[#16213E] text-white text-xs">Review</option>
+                            <option value="Flagged" className="bg-[#16213E] text-white text-xs">Flagged</option>
+                            <option value="Rejected" className="bg-[#16213E] text-white text-xs">Rejected</option>
                         </select>
                     </div>
                 </div>
