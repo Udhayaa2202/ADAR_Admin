@@ -170,8 +170,8 @@ const ReportDetailsPage = ({ report, onBack, onVerifyPhoto, onRefresh }) => {
         }
 
         const map = L.map(mapRef.current).setView([mapLat, mapLng], 15);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+        L.tileLayer('https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}', {
+            attribution: '&copy; Google Maps',
         }).addTo(map);
 
         const markerIcon = L.icon({
