@@ -27,6 +27,14 @@ function AppContent() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const isRestoringRef = React.useRef(true);
 
+    const handleTabChange = (tabId) => {
+        setActiveTab(tabId);
+        setViewedReport(null);
+        setVerifyingReport(null);
+        setVerifyingResults(null);
+        if (window.innerWidth < 1024) setIsOpen(false);
+    };
+
     const handleViewReport = (report) => {
         setViewedReport(report);
     };
@@ -44,19 +52,16 @@ function AppContent() {
 
     React.useEffect(() => {
         sessionStorage.setItem('activeTab', activeTab);
-        if (activeTab !== 'photo-verification') {
-            setVerifyingReport(null);
-            setVerifyingResults(null);
-        }
     }, [activeTab]);
 
     React.useEffect(() => {
-        const handleTabChange = (e) => {
-            setActiveTab(e.detail);
-            setViewedReport(null);
+        const handleExternalTabChange = (e) => {
+            handleTabChange(e.detail);
         };
-        window.addEventListener('changeTab', handleTabChange);
-        return () => window.removeEventListener('changeTab', handleTabChange);
+        window.addEventListener('changeTab', handleExternalTabChange);
+        return () => {
+            window.removeEventListener('changeTab', handleExternalTabChange);
+        };
     }, []);
 
     // Persist verifyingReport ID (skip on initial mount to avoid race condition)
@@ -137,7 +142,7 @@ function AppContent() {
         >
             <Sidebar 
                 activeTab={activeTab} 
-                setActiveTab={setActiveTab} 
+                setActiveTab={handleTabChange} 
                 notificationCount={newReportsCount}
                 isOpen={isSidebarOpen}
                 setIsOpen={setIsSidebarOpen}

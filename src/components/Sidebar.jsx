@@ -24,6 +24,11 @@ const navItems = [
 const Sidebar = ({ activeTab, setActiveTab, notificationCount, isOpen, setIsOpen }) => {
     const { logout } = useAuth();
 
+    const handleTabClick = (tabId) => {
+        setActiveTab(tabId);
+        if (window.innerWidth < 1024) setIsOpen(false);
+    };
+
     const handleSignOut = async () => {
         try {
             await logout();
@@ -67,10 +72,7 @@ const Sidebar = ({ activeTab, setActiveTab, notificationCount, isOpen, setIsOpen
                     {navItems.map((item) => (
                         <button
                             key={item.id}
-                            onClick={() => {
-                                setActiveTab(item.id);
-                                if (window.innerWidth < 1024) setIsOpen(false);
-                            }}
+                            onClick={() => handleTabClick(item.id)}
                             className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group ${activeTab === item.id
                                 ? 'bg-cyber-dark-accent text-white shadow-lg shadow-cyber-dark-accent/25'
                                 : 'text-white/50 hover:bg-white/5 hover:text-white'
