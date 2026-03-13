@@ -11,7 +11,7 @@ import SettingsPage from './pages/SettingsPage';
 import Login from './pages/Login';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import { subscribeToReports } from './services/dataService';
+import { subscribeToReports, fetchAllReports } from './services/dataService';
 
 function AppContent() {
     const [activeTab, setActiveTab] = useState(() => {

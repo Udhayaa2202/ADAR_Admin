@@ -2,7 +2,9 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
     onAuthStateChanged,
     signInWithEmailAndPassword,
-    signOut
+    signOut,
+    setPersistence,
+    browserSessionPersistence
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
 
@@ -15,6 +17,11 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Set persistence to session only to ensure user is asked to log in 
+        // after closing the browser if they didn't explicitly sign out.
+        setPersistence(auth, browserSessionPersistence)
+            .catch((error) => console.error("Error setting persistence:", error));
+
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setUser(user);
             setLoading(false);
@@ -27,8 +34,16 @@ export const AuthProvider = ({ children }) => {
         return signInWithEmailAndPassword(auth, email, password);
     };
 
-    const logout = () => {
-        return signOut(auth);
+    const logout = async () => {
+        try {
+            await signOut(auth);
+            // Clear session storage to reset UI state (active tab, viewed reports, etc.)
+            sessionStorage.clear();
+            // Clear specific local storage items if any (e.g., lastSeenReportCount)
+            localStorage.removeItem('lastSeenReportCount');
+        } catch (error) {
+            throw error;
+        }
     };
 
     const value = {
