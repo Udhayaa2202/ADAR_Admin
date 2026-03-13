@@ -52,7 +52,6 @@ const Dashboard = ({ onViewReport }) => {
     const processChartData = () => {
         if (!reports.length) return [];
 
-        // Use YYYY-MM-DD / YYYY-MM keys for proper sorting, display labels separately
         const toSortKey = (d) => {
             if (viewType === 'daily') {
                 return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -67,10 +66,27 @@ const Dashboard = ({ onViewReport }) => {
             return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
         };
 
+        // 1. Identify each user's first report bucket (key)
+        const userFirstKeyMap = {};
+        reports.forEach(r => {
+            const date = r.createdAt?.toDate ? r.createdAt.toDate() : new Date(r.incidentDate || 0);
+            const key = toSortKey(date);
+            const uid = r.userId;
+            if (uid && (!userFirstKeyMap[uid] || key < userFirstKeyMap[uid])) {
+                userFirstKeyMap[uid] = key;
+            }
+        });
+
+        // 2. Count new users per bucket key
+        const installCounts = {};
+        Object.values(userFirstKeyMap).forEach(key => {
+            installCounts[key] = (installCounts[key] || 0) + 1;
+        });
+
         const dataMap = {};
 
         reports.forEach(report => {
-            const date = report.createdAt?.toDate ? report.createdAt.toDate() : new Date(report.incidentDate || Date.now());
+            const date = report.createdAt?.toDate ? report.createdAt.toDate() : new Date(report.incidentDate || 0);
             const key = toSortKey(date);
 
             if (!dataMap[key]) {
@@ -81,6 +97,7 @@ const Dashboard = ({ onViewReport }) => {
                     Flagged: 0,
                     'Under Review': 0,
                     Rejected: 0,
+                    newInstalls: installCounts[key] || 0,
                     _userIds: new Set(),
                     _trustSums: { Approved: 0, Flagged: 0, 'Under Review': 0, Rejected: 0 },
                     _trustCounts: { Approved: 0, Flagged: 0, 'Under Review': 0, Rejected: 0 }
@@ -96,7 +113,7 @@ const Dashboard = ({ onViewReport }) => {
             }
         });
 
-        // Sort chronologically (oldest first) — only dates with reports
+        // Sort chronologically (oldest first)
         return Object.entries(dataMap)
             .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
             .map(([, item]) => ({
@@ -148,23 +165,28 @@ const Dashboard = ({ onViewReport }) => {
     const categoryData = processCategoryData();
 
     const getStatsForRange = (rangeReports, allReports) => {
-    
         const usersInRange = [...new Set(rangeReports.map(r => r.userId))];
         
+        // Use a consistent date-only comparison helper
+        const toDayKey = (d) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+        
         const newInstalls = usersInRange.filter(userId => {
+            if (!userId) return false;
             const userReports = allReports.filter(r => r.userId === userId);
             if (userReports.length === 0) return false;
             
-            const earliestReport = userReports.reduce((prev, curr) => {
-                const prevDate = prev.createdAt?.toDate ? prev.createdAt.toDate() : new Date(prev.incidentDate || 0);
-                const currDate = curr.createdAt?.toDate ? curr.createdAt.toDate() : new Date(curr.incidentDate || 0);
-                return prevDate < currDate ? prev : curr;
-            });
+            // Earliest report date across ALL historical data
+            const earliestDate = userReports.reduce((min, r) => {
+                const rDate = r.createdAt?.toDate ? r.createdAt.toDate() : new Date(r.incidentDate || 0);
+                return rDate < min ? rDate : min;
+            }, new Date());
             
-            const earliestDate = earliestReport.createdAt?.toDate ? earliestReport.createdAt.toDate() : new Date(earliestReport.incidentDate || 0);
+            const earliestDayKey = toDayKey(earliestDate);
+            
+            // Check if user's first-ever report happened on a day that is in the current range
             return rangeReports.some(r => {
                 const rDate = r.createdAt?.toDate ? r.createdAt.toDate() : new Date(r.incidentDate || 0);
-                return rDate.getTime() === earliestDate.getTime();
+                return toDayKey(rDate) === earliestDayKey;
             });
         }).length;
 
@@ -189,7 +211,7 @@ const Dashboard = ({ onViewReport }) => {
             prevEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
         }
 
-        const getReportDate = (r) => r.createdAt?.toDate ? r.createdAt.toDate() : new Date(r.incidentDate || Date.now());
+        const getReportDate = (r) => r.createdAt?.toDate ? r.createdAt.toDate() : new Date(r.incidentDate || 0);
 
         const currentReports = reports.filter(r => getReportDate(r) >= currentStart);
         const prevReports = reports.filter(r => {
@@ -253,11 +275,11 @@ const Dashboard = ({ onViewReport }) => {
     const displayStats = hoveredPoint ? {
         total: hoveredPoint.total,
         flagged: hoveredPoint.Flagged,
-        newInstalls: hoveredPoint.userCount, // Note: On chart hover, we still show active reporters for that point
+        newInstalls: hoveredPoint.newInstalls,
         trends: {
             total: getHoverTrend(hoveredPoint.total, 'total'),
             flagged: getHoverTrend(hoveredPoint.Flagged, 'Flagged'),
-            newInstalls: getHoverTrend(hoveredPoint.userCount, 'userCount')
+            newInstalls: getHoverTrend(hoveredPoint.newInstalls, 'newInstalls')
         },
         labelTitle: hoveredPoint.name,
         isHover: true
@@ -442,14 +464,29 @@ const Dashboard = ({ onViewReport }) => {
                                         backgroundColor: '#16213E',
                                         border: '1px solid rgba(255,255,255,0.1)',
                                         borderRadius: '12px',
-                                        fontSize: '12px'
+                                        fontSize: '12px',
+                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4)'
                                     }}
                                     itemStyle={{ fontSize: '10px', fontWeight: 'bold' }}
+                                    formatter={(value, name) => {
+                                        if (name === 'newInstalls') return [value, 'New Installs'];
+                                        return [value, name];
+                                    }}
                                 />
                                 <Area type="monotone" dataKey="Approved" stroke="#00F5B8" strokeWidth={3} fillOpacity={1} fill="url(#colorApproved)" stackId="1" />
                                 <Area type="monotone" dataKey="Under Review" stroke="#4D94FF" strokeWidth={3} fillOpacity={1} fill="url(#colorReview)" stackId="1" />
                                 <Area type="monotone" dataKey="Flagged" stroke="#FFBE0B" strokeWidth={3} fillOpacity={1} fill="url(#colorFlagged)" stackId="1" />
                                 <Area type="monotone" dataKey="Rejected" stroke="#EF233C" strokeWidth={3} fillOpacity={1} fill="url(#colorRejected)" stackId="1" />
+                                <Area 
+                                    type="monotone" 
+                                    dataKey="newInstalls" 
+                                    stroke="#06D6A0" 
+                                    strokeWidth={2} 
+                                    strokeDasharray="4 4" 
+                                    fill="transparent" 
+                                    dot={{ r: 3, fill: '#06D6A0' }}
+                                    activeDot={{ r: 5, stroke: '#fff', strokeWidth: 2 }}
+                                />
                             </AreaChart>
                         </ResponsiveContainer>
                     </motion.div>
