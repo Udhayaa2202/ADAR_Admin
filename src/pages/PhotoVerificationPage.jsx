@@ -354,7 +354,7 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                             </div>
                         </motion.div>
 
-                        {/* Capture Source Detection */}
+                        {/* Reporter Notes */}
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -362,19 +362,19 @@ const PhotoVerificationPage = ({ report, results, onScanComplete, onNavigate, on
                             className="glass-card p-6 flex items-center justify-between border-l-4 border-l-cyber-dark-accent mb-auto"
                         >
                             <div className="flex items-center gap-4">
-                                <div className={`p-3 rounded-2xl ${localResults ? (localResults.isLive ? 'bg-cyber-dark-green/20' : 'bg-cyber-dark-amber/20') : 'bg-white/5'}`}>
-                                    <ShieldCheck className={`w-6 h-6 ${localResults ? (localResults.isLive ? 'text-cyber-dark-green' : 'text-cyber-dark-amber') : 'text-white/20'}`} />
+                                <div className={`p-3 rounded-2xl ${localResults ? 'bg-cyber-dark-accent/20' : 'bg-white/5'}`}>
+                                    <FileText className={`w-6 h-6 ${localResults ? 'text-cyber-dark-accent' : 'text-white/20'}`} />
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] text-white/70 uppercase font-black tracking-widest">Capture Source</p>
-                                    <h4 className="text-white font-bold text-lg">
-                                        {localResults ? (localResults.isLive ? 'LIVE CAMERA' : 'GALLERY UPLOAD') : 'DETECTING SOURCE...'}
+                                    <p className="text-[10px] text-white/70 uppercase font-black tracking-widest">Reporter Notes</p>
+                                    <h4 className="text-white font-medium text-sm truncate max-w-[200px] italic">
+                                        {localResults ? `"${report.description || report.notes || report.activity_type || 'No description provided.'}"` : 'LOADING COMMENTS...'}
                                     </h4>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <span className={`text-[10px] font-black px-2 py-1 rounded border uppercase tracking-widest ${localResults ? (localResults.isLive ? 'bg-cyber-dark-green/10 border-cyber-dark-green/20 text-cyber-dark-green' : 'bg-cyber-dark-amber/10 border-cyber-dark-amber/20 text-cyber-dark-amber') : 'bg-white/5 border-white/5 text-white/20'}`}>
-                                    {localResults ? (localResults.isLive ? 'SECURE_STREAM' : 'UNVERIFIED_DATA') : 'SCANNING'}
+                                <span className={`text-[10px] font-black px-2 py-1 rounded border uppercase tracking-widest ${localResults ? 'bg-cyber-dark-accent/10 border-cyber-dark-accent/20 text-cyber-dark-accent' : 'bg-white/5 border-white/5 text-white/20'}`}>
+                                    {localResults ? 'CITIZEN_LOG' : 'SCANNING'}
                                 </span>
                             </div>
                         </motion.div>
